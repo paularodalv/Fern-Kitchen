@@ -1,6 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import type { Recipe, RecipeFields, RecipeFilters, RecipeIngredient, RecipeStep, RecipeSummary } from '../../types/recipe';
 import { RecipeNotFoundError, validateRecipeFields } from '../../features/recipes/validation.ts';
+import { normalizeIngredientName } from '../../features/pantry/normalize-name.ts';
 
 type RecipeRow = Omit<RecipeSummary, 'isFavorite'> & { favoriteFlag: number };
 type IngredientRow = Omit<RecipeIngredient, 'optional'> & { optionalFlag: number };
@@ -27,6 +28,33 @@ const recipeSelect = `
 
 export class RecipeRepository {
   constructor(private readonly database: SQLiteDatabase, private readonly createUuid: () => string) {}
+
+  async normalizeStoredIngredientNames(): Promise<void> {
+    const migrationKey = 'recipe_ingredient_names_normalized_v1';
+    const completed = await this.database.getFirstAsync<{ value: string }>(
+      'SELECT value FROM app_metadata WHERE key = ? LIMIT 1;',
+      migrationKey,
+    );
+    if (completed) return;
+
+    const rows = await this.database.getAllAsync<{ id: string; name: string }>(
+      'SELECT id, name FROM recipe_ingredients;',
+    );
+    await this.database.withTransactionAsync(async () => {
+      for (const row of rows) {
+        await this.database.runAsync(
+          'UPDATE recipe_ingredients SET normalized_name = ? WHERE id = ?;',
+          normalizeIngredientName(row.name),
+          row.id,
+        );
+      }
+      await this.database.runAsync(
+        'INSERT OR REPLACE INTO app_metadata (key, value) VALUES (?, ?);',
+        migrationKey,
+        '1',
+      );
+    });
+  }
 
   async list(filters: RecipeFilters = {}): Promise<RecipeSummary[]> {
     const conditions: string[] = [];
@@ -176,9 +204,9 @@ export class RecipeRepository {
     for (let index = 0; index < fields.ingredients.length; index += 1) {
       const ingredient = fields.ingredients[index];
       await this.database.runAsync(
-        `INSERT INTO recipe_ingredients (id, recipe_id, name, quantity, unit, position, is_optional)
-         VALUES (?, ?, ?, ?, ?, ?, ?);`,
-        this.createUuid(), recipeId, ingredient.name, ingredient.quantity, ingredient.unit,
+        `INSERT INTO recipe_ingredients (id, recipe_id, name, normalized_name, quantity, unit, position, is_optional)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+        this.createUuid(), recipeId, ingredient.name, normalizeIngredientName(ingredient.name), ingredient.quantity, ingredient.unit,
         index, ingredient.optional ? 1 : 0,
       );
     }

@@ -82,6 +82,43 @@ const migrations: Migration[] = [
       CREATE INDEX kitchen_timers_recipe_id_idx ON kitchen_timers(recipe_id);
     `,
   },
+  {
+    version: 4,
+    sql: `
+      ALTER TABLE recipe_ingredients ADD COLUMN normalized_name TEXT NOT NULL DEFAULT '';
+      UPDATE recipe_ingredients SET normalized_name = lower(trim(name));
+      CREATE TABLE pantry_items (
+        id TEXT PRIMARY KEY NOT NULL,
+        user_id TEXT,
+        name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+        normalized_name TEXT NOT NULL,
+        quantity REAL NOT NULL CHECK (quantity >= 0),
+        unit TEXT NOT NULL,
+        purchase_date TEXT,
+        best_before_date TEXT,
+        category TEXT NOT NULL,
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX pantry_items_user_id_idx ON pantry_items(user_id);
+      CREATE INDEX pantry_items_normalized_name_idx ON pantry_items(normalized_name);
+      CREATE INDEX pantry_items_category_idx ON pantry_items(category);
+      CREATE INDEX pantry_items_best_before_idx ON pantry_items(best_before_date);
+      CREATE TABLE seasonal_products (
+        id TEXT PRIMARY KEY NOT NULL,
+        season TEXT NOT NULL CHECK (season IN ('Primavera', 'Verano', 'Otoño', 'Invierno')),
+        name TEXT NOT NULL,
+        normalized_name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        note TEXT NOT NULL DEFAULT '',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        UNIQUE (season, normalized_name)
+      );
+      CREATE INDEX seasonal_products_season_idx ON seasonal_products(season, sort_order);
+      CREATE INDEX seasonal_products_normalized_name_idx ON seasonal_products(normalized_name);
+    `,
+  },
 ];
 
 export async function migrateDatabase(database: SQLiteDatabase): Promise<void> {
