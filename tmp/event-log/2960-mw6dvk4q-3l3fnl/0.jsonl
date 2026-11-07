@@ -1,0 +1,36 @@
+{"_e":"root:init","_t":1794054749362.076,"version":"58.1.19"}
+{"_e":"env:mode","_t":1794054749560.954,"nodeEnv":"production","mode":"production"}
+{"_e":"env:load","_t":1794054749566.516,"mode":"production","files":[],"keys":[]}
+{"_e":"devserver:start","_t":1794054750053.345,"mode":"production","web":true,"baseUrl":"","asyncRoutes":true,"routerRoot":"app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":true}
+{"_e":"metro:config","_t":1794054750517.118,"serverRoot":".","projectRoot":".","exporting":true,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"metro:instantiate","_t":1794054750989.007,"_d":935.3244000000001,"atlas":false,"workers":8,"host":null,"port":null}
+{"_e":"devserver:url","_t":1794054750992.794,"bundler":"metro","url":"http://192.168.0.18:8081","runtimeUrl":"exp://192.168.0.18:8081?__expo_disable_fab=1&__expo_disable_auto_launch=1&__expo_disable_onboarding=1","hostType":null,"port":8081}
+{"_e":"filemap:build","_t":1794054751607.793,"_d":619.3752,"crawler":"node","fromCache":true}
+{"_e":"metro:bundling:start","_t":1794054751729.648,"id":"1","platform":"android","environment":null,"entry":"node_modules\\expo-router\\entry.js","bundleType":"module","dev":false,"minify":true}
+{"_e":"metro:bundling:progress","_t":1794054751735.531,"id":"1","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1794054751832.702,"id":"1","progress":0.05368828078524688,"total":246,"current":57}
+{"_e":"metro:bundling:progress","_t":1794054751932.846,"id":"1","progress":0.17569651116927817,"total":501,"current":210}
+{"_e":"metro:bundling:progress","_t":1794054752032.720,"id":"1","progress":0.3144065148834878,"total":667,"current":374}
+{"_e":"metro:bundling:progress","_t":1794054752132.692,"id":"1","progress":0.3623058387822117,"total":834,"current":502}
+{"_e":"metro:bundling:progress","_t":1794054752233.142,"id":"1","progress":0.4792899408284023,"total":962,"current":666}
+{"_e":"metro:bundling:progress","_t":1794054752332.945,"id":"1","progress":0.667128213664333,"total":1037,"current":847}
+{"_e":"metro:bundling:progress","_t":1794054752432.991,"id":"1","progress":0.7972498710804805,"total":1139,"current":1017}
+{"_e":"metro:bundling:progress","_t":1794054752533.255,"id":"1","progress":0.901493760664856,"total":1227,"current":1165}
+{"_e":"metro:bundling:progress","_t":1794054752635.460,"id":"1","progress":0.9678058761278424,"total":1294,"current":1273}
+{"_e":"metro:bundling:progress","_t":1794054752736.241,"id":"1","progress":0.995497191459961,"total":1331,"current":1328}
+{"_e":"metro:worker_log","_t":1794054753638.168,"stream":"stderr","data":"(node:2960) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"}
+{"_e":"metro:bundling:progress","_t":1794054753718.921,"id":"1","progress":0.9969969986921139,"total":1331,"current":1329}
+{"_e":"root:init","_t":1794054752191.920,"_w":"worker_thread:1"}
+{"_e":"metro:bundling:progress","_t":1794054753825.711,"id":"1","progress":0.9969969986921139,"total":1334,"current":1330}
+{"_e":"metro:worker_log","_t":1794054753868.750,"stream":"stderr","data":"(node:2960) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"}
+{"_e":"metro:bundling:progress","_t":1794054753926.496,"id":"1","progress":0.9969969986921139,"total":1525,"current":1434}
+{"_e":"root:init","_t":1794054752365.621,"_w":"worker_thread:2"}
+{"_e":"metro:bundling:progress","_t":1794054754025.805,"id":"1","progress":0.9969969986921139,"total":1654,"current":1624}
+{"_e":"metro:bundling:progress","_t":1794054754136.427,"id":"1","progress":0.9988112928242099,"total":1682,"current":1681}
+{"_e":"metro:worker_log","_t":1794054754211.690,"stream":"stderr","data":"(node:2960) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"}
+{"_e":"metro:bundling:progress","_t":1794054754300.245,"id":"1","progress":0.999,"total":1682,"current":1682}
+{"_e":"root:init","_t":1794054752657.824,"_w":"worker_thread:3"}
+{"_e":"metro:bundling:done","_t":1794054762896.383,"_d":11166.7456,"id":"1","platform":"android","environment":null,"entry":"node_modules\\expo-router\\entry.js","total":1682}
+{"_e":"export:bundle","_t":1794054762897.192,"platform":"android","assets":16,"ms":11902}
+{"_e":"devserver:stop","_t":1794054762915.260,"bundler":"metro","ms":1}
+{"_e":"export:done","_t":1794054763004.171,"_d":12978.224,"platforms":["android"],"outputDir":".tmp-fermentation-android-check","mode":"single","dev":false}

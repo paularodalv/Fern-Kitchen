@@ -160,6 +160,124 @@ const migrations: Migration[] = [
       CREATE INDEX shopping_list_normalized_name_idx ON shopping_list_items(normalized_name);
     `,
   },
+  {
+    version: 6,
+    sql: `
+      CREATE TABLE fermentation_projects (
+        id TEXT PRIMARY KEY NOT NULL,
+        user_id TEXT,
+        name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+        fermentation_type TEXT NOT NULL,
+        custom_type_name TEXT,
+        description TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL CHECK (status IN ('planned', 'active', 'observing', 'paused', 'completed', 'discarded')),
+        start_date TEXT NOT NULL,
+        expected_duration_days INTEGER CHECK (expected_duration_days IS NULL OR expected_duration_days > 0),
+        temperature_notes TEXT NOT NULL DEFAULT '',
+        initial_photo_uri TEXT,
+        personal_notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX fermentation_projects_user_status_idx ON fermentation_projects(user_id, status);
+      CREATE INDEX fermentation_projects_updated_idx ON fermentation_projects(updated_at DESC);
+      CREATE INDEX fermentation_projects_type_idx ON fermentation_projects(fermentation_type);
+
+      CREATE TABLE fermentation_batches (
+        id TEXT PRIMARY KEY NOT NULL,
+        project_id TEXT NOT NULL REFERENCES fermentation_projects(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        start_date TEXT NOT NULL,
+        completion_date TEXT,
+        status TEXT NOT NULL CHECK (status IN ('planned', 'active', 'observing', 'paused', 'completed', 'discarded')),
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX fermentation_batches_project_idx ON fermentation_batches(project_id, start_date);
+      CREATE INDEX fermentation_batches_status_idx ON fermentation_batches(status);
+
+      CREATE TABLE fermentation_events (
+        id TEXT PRIMARY KEY NOT NULL,
+        project_id TEXT NOT NULL REFERENCES fermentation_projects(id) ON DELETE CASCADE,
+        batch_id TEXT REFERENCES fermentation_batches(id) ON DELETE CASCADE,
+        event_type TEXT NOT NULL CHECK (event_type IN ('preparation', 'feeding', 'measurement', 'observation', 'status_change', 'completion', 'note')),
+        event_date TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        measurements_json TEXT NOT NULL DEFAULT '[]',
+        ingredients_json TEXT NOT NULL DEFAULT '[]',
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        CHECK (batch_id IS NULL OR project_id IS NOT NULL)
+      );
+      CREATE INDEX fermentation_events_project_date_idx ON fermentation_events(project_id, event_date DESC);
+      CREATE INDEX fermentation_events_batch_date_idx ON fermentation_events(batch_id, event_date DESC);
+      CREATE INDEX fermentation_events_type_idx ON fermentation_events(event_type);
+
+      CREATE TABLE fermentation_reminders (
+        id TEXT PRIMARY KEY NOT NULL,
+        project_id TEXT NOT NULL REFERENCES fermentation_projects(id) ON DELETE CASCADE,
+        batch_id TEXT REFERENCES fermentation_batches(id) ON DELETE CASCADE,
+        title TEXT NOT NULL CHECK (length(trim(title)) > 0),
+        task_type TEXT NOT NULL CHECK (task_type IN ('feeding', 'check', 'measurement', 'tasting', 'custom')),
+        scheduled_at TEXT NOT NULL,
+        notification_id TEXT,
+        is_completed INTEGER NOT NULL DEFAULT 0 CHECK (is_completed IN (0, 1)),
+        completed_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX fermentation_reminders_due_idx ON fermentation_reminders(is_completed, scheduled_at);
+      CREATE INDEX fermentation_reminders_project_idx ON fermentation_reminders(project_id, scheduled_at);
+
+      CREATE TABLE fermentation_photos (
+        id TEXT PRIMARY KEY NOT NULL,
+        project_id TEXT NOT NULL REFERENCES fermentation_projects(id) ON DELETE CASCADE,
+        batch_id TEXT REFERENCES fermentation_batches(id) ON DELETE CASCADE,
+        event_id TEXT REFERENCES fermentation_events(id) ON DELETE CASCADE,
+        local_uri TEXT NOT NULL,
+        caption TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX fermentation_photos_project_idx ON fermentation_photos(project_id, created_at DESC);
+      CREATE INDEX fermentation_photos_batch_idx ON fermentation_photos(batch_id, created_at DESC);
+
+      CREATE TABLE fermentation_ingredients (
+        id TEXT PRIMARY KEY NOT NULL,
+        project_id TEXT NOT NULL REFERENCES fermentation_projects(id) ON DELETE CASCADE,
+        batch_id TEXT REFERENCES fermentation_batches(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        quantity REAL CHECK (quantity IS NULL OR quantity >= 0),
+        unit TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        CHECK (batch_id IS NULL OR project_id IS NOT NULL)
+      );
+      CREATE INDEX fermentation_ingredients_project_idx ON fermentation_ingredients(project_id);
+      CREATE INDEX fermentation_ingredients_batch_idx ON fermentation_ingredients(batch_id);
+
+      CREATE TABLE fermentation_custom_fields (
+        id TEXT PRIMARY KEY NOT NULL,
+        project_id TEXT NOT NULL REFERENCES fermentation_projects(id) ON DELETE CASCADE,
+        batch_id TEXT REFERENCES fermentation_batches(id) ON DELETE CASCADE,
+        name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+        field_type TEXT NOT NULL CHECK (field_type IN ('text', 'number', 'measurement', 'date', 'boolean')),
+        unit TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX fermentation_custom_fields_project_idx ON fermentation_custom_fields(project_id);
+      CREATE INDEX fermentation_custom_fields_batch_idx ON fermentation_custom_fields(batch_id);
+
+      CREATE TABLE fermentation_custom_field_values (
+        id TEXT PRIMARY KEY NOT NULL,
+        field_id TEXT NOT NULL REFERENCES fermentation_custom_fields(id) ON DELETE CASCADE,
+        event_id TEXT NOT NULL REFERENCES fermentation_events(id) ON DELETE CASCADE,
+        value_text TEXT NOT NULL,
+        recorded_at TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX fermentation_custom_field_history_idx ON fermentation_custom_field_values(field_id, recorded_at DESC);
+    `,
+  },
 ];
 
 export async function migrateDatabase(database: SQLiteDatabase): Promise<void> {

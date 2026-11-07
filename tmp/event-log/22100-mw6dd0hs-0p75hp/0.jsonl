@@ -1,0 +1,51 @@
+{"_e":"root:init","_t":1794053884101.914,"version":"58.1.19"}
+{"_e":"env:mode","_t":1794053884234.379,"nodeEnv":"production","mode":"production"}
+{"_e":"env:load","_t":1794053884237.550,"mode":"production","files":[],"keys":[]}
+{"_e":"devserver:start","_t":1794053884688.386,"mode":"production","web":true,"baseUrl":"","asyncRoutes":true,"routerRoot":"app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":true}
+{"_e":"metro:config","_t":1794053885070.300,"serverRoot":".","projectRoot":".","exporting":true,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"metro:instantiate","_t":1794053885555.479,"_d":866.7778000000001,"atlas":false,"workers":8,"host":null,"port":null}
+{"_e":"devserver:url","_t":1794053885563.158,"bundler":"metro","url":"http://192.168.0.18:8081","runtimeUrl":"exp://192.168.0.18:8081?__expo_disable_fab=1&__expo_disable_auto_launch=1&__expo_disable_onboarding=1","hostType":null,"port":8081}
+{"_e":"filemap:build","_t":1794053886137.463,"_d":583.1285000000003,"crawler":"node","fromCache":true}
+{"_e":"metro:bundling:start","_t":1794053886258.765,"id":"1","platform":"android","environment":null,"entry":"node_modules\\expo-router\\entry.js","bundleType":"module","dev":false,"minify":true}
+{"_e":"metro:bundling:progress","_t":1794053886264.675,"id":"1","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1794053886362.113,"id":"1","progress":0.052355644929617924,"total":236,"current":54}
+{"_e":"metro:bundling:progress","_t":1794053886461.533,"id":"1","progress":0.1998843116308795,"total":463,"current":207}
+{"_e":"metro:bundling:progress","_t":1794053886561.638,"id":"1","progress":0.3821487603305785,"total":715,"current":442}
+{"_e":"metro:bundling:progress","_t":1794053886661.773,"id":"1","progress":0.696077470205095,"total":851,"current":710}
+{"_e":"metro:bundling:progress","_t":1794053886761.572,"id":"1","progress":0.8817668054729326,"total":1066,"current":1001}
+{"_e":"metro:bundling:progress","_t":1794053886873.103,"id":"1","progress":0.9982150829081633,"total":1120,"current":1119}
+{"_e":"metro:worker_log","_t":1794053887252.909,"stream":"stderr","data":"(node:22100) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"}
+{"_e":"metro:bundling:progress","_t":1794053887301.832,"id":"1","progress":0.999,"total":1120,"current":1120}
+{"_e":"root:init","_t":1794053886595.073,"_w":"worker_thread:1"}
+{"_e":"metro:bundling:progress","_t":1794053887402.822,"id":"1","progress":0.999,"total":1161,"current":1131}
+{"_e":"metro:bundling:progress","_t":1794053887502.832,"id":"1","progress":0.999,"total":1267,"current":1232}
+{"_e":"metro:bundling:progress","_t":1794053887614.572,"id":"1","progress":0.999,"total":1318,"current":1315}
+{"_e":"metro:worker_log","_t":1794053889758.856,"stream":"stderr","data":"(node:22100) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"}
+{"_e":"metro:bundling:progress","_t":1794053889842.022,"id":"1","progress":0.999,"total":1318,"current":1316}
+{"_e":"root:init","_t":1794053888042.297,"_w":"worker_thread:4"}
+{"_e":"metro:worker_log","_t":1794053889865.784,"stream":"stderr","data":"(node:22100) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"}
+{"_e":"metro:bundling:progress","_t":1794053889941.795,"id":"1","progress":0.999,"total":1467,"current":1379}
+{"_e":"root:init","_t":1794053888028.059,"_w":"worker_thread:2"}
+{"_e":"metro:bundling:progress","_t":1794053890041.595,"id":"1","progress":0.999,"total":1582,"current":1493}
+{"_e":"metro:bundling:progress","_t":1794053890143.281,"id":"1","progress":0.999,"total":1650,"current":1618}
+{"_e":"metro:worker_log","_t":1794053890188.366,"stream":"stderr","data":"(node:22100) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"}
+{"_e":"metro:bundling:progress","_t":1794053890248.895,"id":"1","progress":0.999,"total":1677,"current":1671}
+{"_e":"metro:bundling:progress","_t":1794053890348.756,"id":"1","progress":0.999,"total":1680,"current":1675}
+{"_e":"metro:bundling:progress","_t":1794053890484.081,"id":"1","progress":0.999,"total":1680,"current":1676}
+{"_e":"root:init","_t":1794053888046.774,"_w":"worker_thread:3"}
+{"_e":"metro:bundling:progress","_t":1794053890588.257,"id":"1","progress":0.999,"total":1681,"current":1677}
+{"_e":"metro:worker_log","_t":1794053892310.874,"stream":"stderr","data":"(node:22100) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"}
+{"_e":"metro:bundling:progress","_t":1794053892365.364,"id":"1","progress":0.999,"total":1681,"current":1678}
+{"_e":"root:init","_t":1794053890683.322,"_w":"worker_thread:6"}
+{"_e":"metro:worker_log","_t":1794053892425.222,"stream":"stderr","data":"(node:22100) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"}
+{"_e":"metro:worker_log","_t":1794053892431.023,"stream":"stderr","data":"(node:22100) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"}
+{"_e":"metro:worker_log","_t":1794053892440.902,"stream":"stderr","data":"(node:22100) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"}
+{"_e":"metro:bundling:progress","_t":1794053892467.849,"id":"1","progress":0.999,"total":1682,"current":1679}
+{"_e":"root:init","_t":1794053890731.388,"_w":"worker_thread:7"}
+{"_e":"root:init","_t":1794053890706.717,"_w":"worker_thread:5"}
+{"_e":"root:init","_t":1794053890715.215,"_w":"worker_thread:8"}
+{"_e":"metro:bundling:progress","_t":1794053892675.531,"id":"1","progress":0.999,"total":1682,"current":1682}
+{"_e":"metro:bundling:done","_t":1794053900224.036,"_d":13965.2813,"id":"1","platform":"android","environment":null,"entry":"node_modules\\expo-router\\entry.js","total":1682}
+{"_e":"export:bundle","_t":1794053900224.945,"platform":"android","assets":16,"ms":14659}
+{"_e":"devserver:stop","_t":1794053900243.315,"bundler":"metro","ms":1}
+{"_e":"export:done","_t":1794053900329.354,"_d":15663.6316,"platforms":["android"],"outputDir":".tmp-fermentation-export","mode":"single","dev":false}

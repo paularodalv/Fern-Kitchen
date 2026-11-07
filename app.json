@@ -19,6 +19,7 @@
       "expo-router",
       "expo-sqlite",
       ["expo-notifications", { "enableRemoteNotifications": false }],
+      ["expo-image-picker", { "photosPermission": "Fern Kitchen puede elegir fotos para tus fermentos.", "cameraPermission": "Fern Kitchen puede tomar fotos para tus fermentos.", "microphonePermission": false }],
       [
         "expo-splash-screen",
         {

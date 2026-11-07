@@ -85,6 +85,12 @@ export default function HomeScreen() {
           <SymbolView name={{ android: 'arrow_forward', ios: 'arrow.right', web: 'arrow_forward' }} tintColor={colors.greenDark} size={18} />
         </Pressable>
 
+        <Pressable accessibilityRole="button" onPress={() => router.push('/fermentation-lab' as never)} style={[styles.mealPlanShortcut, styles.fermentationShortcut]}>
+          <View style={styles.mealPlanIcon}><SymbolView name={{ android: 'science', ios: 'testtube.2', web: 'science' }} tintColor={colors.greenDark} size={22} /></View>
+          <View style={styles.mealPlanCopy}><Text style={styles.mealPlanTitle}>Mi laboratorio</Text><Text style={styles.mealPlanDescription}>Acompaña tus fermentos paso a paso</Text></View>
+          <SymbolView name={{ android: 'arrow_forward', ios: 'arrow.right', web: 'arrow_forward' }} tintColor={colors.greenDark} size={18} />
+        </Pressable>
+
         <View style={styles.section}>
           <SectionTitle title="Tu cuaderno" subtitle={`${recipes.length} recetas para volver a cocinar`} actionLabel="＋ Añadir" onActionPress={() => router.push('/recipes/new')} />
           {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
@@ -137,7 +143,7 @@ const styles = StyleSheet.create({
   greetingCopy: { flex: 1, zIndex: 1 }, overline: { marginBottom: 8, color: colors.greenDark, fontSize: 9, fontWeight: '800', letterSpacing: 1.2 },
   title: { maxWidth: 215, color: colors.text, fontFamily: 'serif', fontSize: 25, fontWeight: '700', letterSpacing: -0.5, lineHeight: 30 },
   description: { marginTop: 7, color: '#66755F', fontSize: 12, lineHeight: 18 }, mouse: { width: 102, height: 128, marginRight: -2, marginTop: 8 }, leaf: { position: 'absolute', top: 12, right: 15 },
-  mealPlanShortcut: { minHeight: 69, marginHorizontal: 22, marginBottom: 30, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: radii.md, backgroundColor: '#F8EDD1' }, mealPlanIcon: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 15, backgroundColor: colors.cream }, mealPlanCopy: { flex: 1, gap: 3 }, mealPlanTitle: { color: colors.text, fontSize: 13, fontWeight: '700' }, mealPlanDescription: { color: colors.secondaryText, fontSize: 10 },
+  mealPlanShortcut: { minHeight: 69, marginHorizontal: 22, marginBottom: 30, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: radii.md, backgroundColor: '#F8EDD1' }, fermentationShortcut: { backgroundColor: colors.greenLight }, mealPlanIcon: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 15, backgroundColor: colors.cream }, mealPlanCopy: { flex: 1, gap: 3 }, mealPlanTitle: { color: colors.text, fontSize: 13, fontWeight: '700' }, mealPlanDescription: { color: colors.secondaryText, fontSize: 10 },
   section: { marginBottom: 28 }, filtersBlock: { marginHorizontal: 22, marginBottom: 27 }, filterLabel: { marginTop: 7, marginBottom: 9, color: colors.text, fontSize: 12, fontWeight: '700' }, chips: { gap: 8, paddingBottom: 6 },
   filterChip: { paddingHorizontal: 13, paddingVertical: 9, borderRadius: radii.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white }, filterChipActive: { borderColor: colors.greenDark, backgroundColor: colors.greenDark }, filterChipText: { color: colors.secondaryText, fontSize: 11, fontWeight: '600' }, filterChipTextActive: { color: colors.white },
   seasonSection: { marginBottom: 24, paddingTop: 2 }, emptyHint: { marginHorizontal: 22, color: colors.secondaryText, fontSize: 13, lineHeight: 20 }, error: { marginHorizontal: 22, marginBottom: 10, color: '#994D43', fontSize: 12 },

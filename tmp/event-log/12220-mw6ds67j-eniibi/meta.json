@@ -1,0 +1,31 @@
+{
+  "format": "v0-jsonl",
+  "pid": 12220,
+  "startedAt": 1794054591343,
+  "command": "expo export",
+  "cwd": "C:\\Users\\minro\\OneDrive - Educacyl\\Escritorio\\Fern Kitchen",
+  "maxSegments": 3,
+  "socket": "\\\\.\\pipe\\event-log-12220-mw6ds67j-eniibi-live",
+  "ipcSocket": "\\\\.\\pipe\\event-log-12220-mw6ds67j-eniibi-ipc",
+  "origin": {
+    "argv": [
+      "C:\\Users\\minro\\OneDrive - Educacyl\\Escritorio\\Fern Kitchen\\node_modules\\expo\\bin\\cli",
+      "export",
+      "--platform",
+      "android",
+      "--output-dir",
+      ".tmp-fermentation-final-export"
+    ],
+    "execPath": "C:\\Program Files\\nodejs\\node.exe",
+    "cwd": "C:\\Users\\minro\\OneDrive - Educacyl\\Escritorio\\Fern Kitchen",
+    "ppid": 30380,
+    "env": {
+      "npmLifecycleEvent": "npx",
+      "npmExecPath": "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js",
+      "npmPackageName": "fern-kitchen"
+    }
+  },
+  "metadata": {
+    "version": "58.1.19"
+  }
+}

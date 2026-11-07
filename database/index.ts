@@ -5,6 +5,7 @@ export { PantryRepository } from './repositories/PantryRepository';
 export { SeasonalProductRepository } from './repositories/SeasonalProductRepository';
 export { MealPlanRepository } from './repositories/MealPlanRepository';
 export { ShoppingListRepository } from './repositories/ShoppingListRepository';
+export { FermentationRepository } from './repositories/FermentationRepository';
 
 import type { SQLiteDatabase } from 'expo-sqlite';
 import * as Crypto from 'expo-crypto';
