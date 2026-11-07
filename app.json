@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Fern Kitchen",
+    "slug": "fern-kitchen",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/fern-app-icon.png",
+    "scheme": "fernkitchen",
+    "userInterfaceStyle": "light",
+    "platforms": ["android"],
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/fern-app-icon-foreground.png",
+        "backgroundColor": "#FFF8EB"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      ["expo-notifications", { "enableRemoteNotifications": false }],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/fern-mouse.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FFF8EB"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
