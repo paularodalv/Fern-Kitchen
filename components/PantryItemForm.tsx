@@ -3,6 +3,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, Text
 import { SymbolView } from 'expo-symbols';
 import { colors, radii } from '@/constants/theme';
 import type { PantryItem, PantryItemFields } from '@/types/pantry';
+import { ImageUploadSection } from '@/components/images/ImageUploadSection';
 
 type PantryItemFormProps = {
   visible: boolean;
@@ -19,6 +20,7 @@ export function PantryItemForm({ visible, initialItem, onCancel, onSave }: Pantr
   const [bestBeforeDate, setBestBeforeDate] = useState(initialItem?.bestBeforeDate ?? '');
   const [category, setCategory] = useState(initialItem?.category ?? 'Despensa');
   const [notes, setNotes] = useState(initialItem?.notes ?? '');
+  const [imageUris, setImageUris] = useState<string[]>(initialItem?.imageLocalUri ? [initialItem.imageLocalUri] : []);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -39,6 +41,7 @@ export function PantryItemForm({ visible, initialItem, onCancel, onSave }: Pantr
         bestBeforeDate: bestBeforeDate.trim() || null,
         category,
         notes,
+        imageLocalUri: imageUris[0] ?? null,
         userId: initialItem?.userId ?? null,
       });
     } catch (cause) {
@@ -69,6 +72,7 @@ export function PantryItemForm({ visible, initialItem, onCancel, onSave }: Pantr
           </View>
           <Field label="Categoría *" value={category} onChangeText={setCategory} placeholder="Ej. Verdura" />
           <Field label="Notas" value={notes} onChangeText={setNotes} placeholder="Dónde lo guardas o cualquier apunte" multiline />
+          <ImageUploadSection category="pantry" title="Foto del ingrediente (opcional)" value={imageUris} onChange={setImageUris} />
           {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
           <Pressable accessibilityRole="button" disabled={saving} onPress={() => { void save(); }} style={[styles.saveButton, saving && styles.disabled]}>
             {saving ? <ActivityIndicator color={colors.white} /> : <Text style={styles.saveText}>{initialItem ? 'Guardar cambios' : 'Guardar ingrediente'}</Text>}

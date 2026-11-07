@@ -95,8 +95,15 @@ export class FermentationRepository {
   }
 
   async deleteProject(id: string): Promise<void> {
-    const result = await this.database.runAsync('DELETE FROM fermentation_projects WHERE id = ?;', id);
-    if (!result.changes) throw new Error('No se encontró el proyecto de fermentación.');
+    await this.database.withTransactionAsync(async () => {
+      const batches = await this.database.getAllAsync<{ id: string }>('SELECT id FROM fermentation_batches WHERE project_id=?;', id);
+      const events = await this.database.getAllAsync<{ id: string }>('SELECT id FROM fermentation_events WHERE project_id=?;', id);
+      const result = await this.database.runAsync('DELETE FROM fermentation_projects WHERE id = ?;', id);
+      if (!result.changes) throw new Error('No se encontró el proyecto de fermentación.');
+      await this.database.runAsync("DELETE FROM image_associations WHERE entity_type='fermentation_project' AND entity_id=?;", id);
+      for (const batch of batches) await this.database.runAsync("DELETE FROM image_associations WHERE entity_type='fermentation_batch' AND entity_id=?;", batch.id);
+      for (const event of events) await this.database.runAsync("DELETE FROM image_associations WHERE entity_type='fermentation_event' AND entity_id=?;", event.id);
+    });
   }
 
   async listBatches(projectId: string): Promise<FermentationBatch[]> {
@@ -127,6 +134,7 @@ export class FermentationRepository {
   async deleteBatch(id: string): Promise<void> {
     const result = await this.database.runAsync('DELETE FROM fermentation_batches WHERE id = ?;', id);
     if (!result.changes) throw new Error('No se encontró el lote.');
+    await this.database.runAsync("DELETE FROM image_associations WHERE entity_type='fermentation_batch' AND entity_id=?;", id);
   }
 
   async setBatchStatus(id: string, status: FermentationStatus): Promise<void> {

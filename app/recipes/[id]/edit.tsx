@@ -7,11 +7,13 @@ import { useRecipeRepository } from '@/hooks/useRecipeRepository';
 import type { Recipe, RecipeFields } from '@/types/recipe';
 import { useKitchenTimerRepository } from '@/hooks/useKitchenTimerRepository';
 import { cancelLocalReminder } from '@/services/notifications';
+import { useImageRepository } from '@/hooks/useImageRepository';
 
 export default function EditRecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const repository = useRecipeRepository();
   const timerRepository = useKitchenTimerRepository();
+  const images = useImageRepository();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [error, setError] = useState('');
 
@@ -30,6 +32,8 @@ export default function EditRecipeScreen() {
   const save = async (fields: RecipeFields) => {
     const timers = await timerRepository.listForRecipe(id);
     await repository.update(id, fields);
+    const cover = fields.imageLocalUri ? await images.getByUri(fields.imageLocalUri) : null;
+    await images.replaceAssociation(cover?.id ?? null, 'recipe', id, 'cover');
     await Promise.all(timers.map((timer) => timer.notificationId ? cancelLocalReminder(timer.notificationId).catch(() => undefined) : Promise.resolve()));
     router.replace({ pathname: '/recipes/[id]', params: { id } });
   };

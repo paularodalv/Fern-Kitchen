@@ -13,12 +13,15 @@ import { cancelLocalReminder } from '@/services/notifications';
 import { formatQuantity, scaleQuantity } from '@/features/recipes/portion-scaling';
 import type { Recipe } from '@/types/recipe';
 import { useCollectionRepository } from '@/hooks/useCollectionRepository';
+import { useImageRepository } from '@/hooks/useImageRepository';
+import { ImageUploadSection } from '@/components/images/ImageUploadSection';
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const repository = useRecipeRepository();
   const timerRepository = useKitchenTimerRepository();
   const collectionRepository = useCollectionRepository();
+  const imageRepository = useImageRepository();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [servings, setServings] = useState(1);
   const [checkedIngredients, setCheckedIngredients] = useState<string[]>([]);
@@ -26,6 +29,8 @@ export default function RecipeDetailScreen() {
   const [notesSaved, setNotesSaved] = useState(true);
   const [error, setError] = useState('');
   const [designId, setDesignId] = useState('classic');
+  const [notePhotos, setNotePhotos] = useState<string[]>([]);
+  const [resultPhotos, setResultPhotos] = useState<string[]>([]);
 
   useFocusEffect(useCallback(() => {
     let active = true;
@@ -42,8 +47,10 @@ export default function RecipeDetailScreen() {
       if (active) setError(cause instanceof Error ? cause.message : 'No se pudo cargar la receta.');
     });
     collectionRepository.getRecipeDesign(id).then((value) => { if (active) setDesignId(value); }).catch(() => undefined);
+    imageRepository.listForEntity('recipe', id, 'note').then((items) => { if (active) setNotePhotos(items.map((item) => item.localUri)); }).catch(() => undefined);
+    imageRepository.listForEntity('recipe', id, 'gallery').then((items) => { if (active) setResultPhotos(items.map((item) => item.localUri)); }).catch(() => undefined);
     return () => { active = false; };
-  }, [id, repository, collectionRepository]));
+  }, [id, repository, collectionRepository, imageRepository]));
 
   const toggleIngredient = (ingredientId: string) => setCheckedIngredients((current) => current.includes(ingredientId)
     ? current.filter((item) => item !== ingredientId)
@@ -85,6 +92,18 @@ export default function RecipeDetailScreen() {
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No se pudieron guardar tus notas.');
     }
+  };
+
+  const saveNotePhotos = async (uris: string[]) => {
+    setNotePhotos(uris);
+    await imageRepository.clearAssociations('recipe', id, 'note');
+    for (const [position, uri] of uris.entries()) await imageRepository.associateByUri(uri, 'recipe', id, 'note', position);
+  };
+
+  const saveResultPhotos = async (uris: string[]) => {
+    setResultPhotos(uris);
+    await imageRepository.clearAssociations('recipe', id, 'gallery');
+    for (const [position, uri] of uris.entries()) await imageRepository.associateByUri(uri, 'recipe', id, 'gallery', position);
   };
 
   if (!recipe) {
@@ -181,6 +200,8 @@ export default function RecipeDetailScreen() {
               <Text style={styles.saveNoteText}>{notesSaved ? 'Notas guardadas' : 'Guardar nota'}</Text>
             </Pressable>
           </View>
+          <ImageUploadSection category="note" title="Fotos de tus notas" value={notePhotos} onChange={(uris) => { void saveNotePhotos(uris).catch((cause: unknown) => setError(cause instanceof Error ? cause.message : 'No se pudieron guardar las fotografías.')); }} multiple maxSelection={10} />
+          <ImageUploadSection category="recipe" title="Fotos del resultado" value={resultPhotos} onChange={(uris) => { void saveResultPhotos(uris).catch((cause: unknown) => setError(cause instanceof Error ? cause.message : 'No se pudieron guardar las fotografías.')); }} multiple maxSelection={10} />
 
           <Pressable onPress={removeRecipe} style={styles.deleteButton}><Text style={styles.deleteText}>Eliminar receta</Text></Pressable>
         </View>

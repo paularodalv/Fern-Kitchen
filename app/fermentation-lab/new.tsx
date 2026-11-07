@@ -6,12 +6,16 @@ import { fermentationTemplates } from '@/features/fermentation/catalog';
 import { useFermentationRepository } from '@/hooks/useFermentationRepository';
 import { colors } from '@/constants/theme';
 import type { FermentationProjectInput } from '@/types/fermentation';
+import { useImageRepository } from '@/hooks/useImageRepository';
 
 export default function NewFermentationProjectScreen() {
   const repository = useFermentationRepository();
+  const images = useImageRepository();
 
   const saveProject = async (input: FermentationProjectInput) => {
     const project = await repository.createProject(input);
+    const cover = input.initialPhotoUri ? await images.getByUri(input.initialPhotoUri) : null;
+    await images.replaceAssociation(cover?.id ?? null, 'fermentation_project', project.id, 'cover');
     const template = fermentationTemplates.find((item) => item.id === project.fermentationType);
     try {
       if (template) {

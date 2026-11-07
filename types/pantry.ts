@@ -8,6 +8,7 @@ export type PantryItemFields = {
   bestBeforeDate: string | null;
   category: string;
   notes: string;
+  imageLocalUri?: string | null;
   userId?: string | null;
 };
 

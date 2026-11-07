@@ -6,6 +6,7 @@ import { addDays, formatDate } from '@/features/meal-planner/calendar';
 import { useRecipeRepository } from '@/hooks/useRecipeRepository';
 import type { MealPlanEntryFields, MealType, PlannedMeal } from '@/types/meal-planner';
 import type { RecipeSummary } from '@/types/recipe';
+import { ImageUploadSection } from '@/components/images/ImageUploadSection';
 
 export const mealTypeOptions: { type: MealType; label: string; icon: string }[] = [
   { type: 'breakfast', label: 'Desayuno', icon: 'coffee' },
@@ -33,6 +34,7 @@ export function MealPlanEntryForm({ visible, date: initialDate, mealType: initia
   const [customMealDescription, setCustomMealDescription] = useState(initialEntry?.customMealDescription ?? '');
   const [servings, setServings] = useState(initialEntry?.servings ?? 2);
   const [notes, setNotes] = useState(initialEntry?.notes ?? '');
+  const [customMealImages, setCustomMealImages] = useState<string[]>(initialEntry?.customMealImageUri ? [initialEntry.customMealImageUri] : []);
   const [query, setQuery] = useState('');
   const [recipes, setRecipes] = useState<RecipeSummary[]>([]);
   const [loadingRecipes, setLoadingRecipes] = useState(false);
@@ -68,6 +70,7 @@ export function MealPlanEntryForm({ visible, date: initialDate, mealType: initia
         customMealDescription: entryKind === 'custom' ? customMealDescription : null,
         servings,
         notes,
+        customMealImageUri: entryKind === 'custom' ? customMealImages[0] ?? null : null,
         userId: initialEntry?.userId ?? null,
       });
     } catch (cause) {
@@ -130,6 +133,7 @@ export function MealPlanEntryForm({ visible, date: initialDate, mealType: initia
             <>
               <Field label="Nombre de la comida *" value={customMealName} onChangeText={setCustomMealName} placeholder="Ej. Ensalada de la huerta" />
               <Field label="Descripción (opcional)" value={customMealDescription} onChangeText={setCustomMealDescription} placeholder="Un detalle que quieras recordar" multiline />
+              <ImageUploadSection category="meal" title="Foto de esta comida" value={customMealImages} onChange={setCustomMealImages} />
             </>
           )}
 

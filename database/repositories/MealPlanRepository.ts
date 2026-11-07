@@ -9,6 +9,7 @@ const selectMeal = `SELECT
   meal.entry_kind AS entryKind, meal.recipe_id AS recipeId,
   meal.custom_meal_name AS customMealName,
   meal.custom_meal_description AS customMealDescription,
+  meal.custom_meal_image_uri AS customMealImageUri,
   meal.servings, meal.notes, meal.created_at AS createdAt, meal.updated_at AS updatedAt,
   recipe.id AS linkedRecipeId, recipe.title AS recipeTitle,
   recipe.image_local_uri AS recipeImageLocalUri
@@ -60,10 +61,10 @@ export class MealPlanRepository {
       await this.ensureSlotIsAvailable(fields.date, fields.mealType, id);
       await this.database.runAsync(
         `UPDATE meal_plan_entries SET user_id = ?, date = ?, meal_type = ?, entry_kind = ?,
-         recipe_id = ?, custom_meal_name = ?, custom_meal_description = ?, servings = ?, notes = ?, updated_at = ?
+         recipe_id = ?, custom_meal_name = ?, custom_meal_description = ?, custom_meal_image_uri = ?, servings = ?, notes = ?, updated_at = ?
          WHERE id = ?;`,
         fields.userId ?? null, fields.date, fields.mealType, fields.entryKind, fields.recipeId,
-        fields.customMealName, fields.customMealDescription, fields.servings, fields.notes, now, id,
+        fields.customMealName, fields.customMealDescription, fields.customMealImageUri ?? null, fields.servings, fields.notes, now, id,
       );
     });
     const updated = await this.getById(id);
@@ -74,6 +75,7 @@ export class MealPlanRepository {
   async delete(id: string): Promise<void> {
     const result = await this.database.runAsync('DELETE FROM meal_plan_entries WHERE id = ?;', id);
     if (result.changes === 0) throw new MealPlanEntryNotFoundError(id);
+    await this.database.runAsync("DELETE FROM image_associations WHERE entity_type='meal_plan' AND entity_id=?;", id);
   }
 
   private async ensureSlotIsAvailable(date: string, mealType: MealPlanEntryFields['mealType'], exceptId?: string): Promise<void> {
@@ -88,10 +90,10 @@ export class MealPlanRepository {
     return this.database.runAsync(
       `INSERT INTO meal_plan_entries
        (id, user_id, date, meal_type, entry_kind, recipe_id, custom_meal_name,
-        custom_meal_description, servings, notes, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+        custom_meal_description, custom_meal_image_uri, servings, notes, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
       id, fields.userId ?? null, fields.date, fields.mealType, fields.entryKind, fields.recipeId,
-      fields.customMealName, fields.customMealDescription, fields.servings, fields.notes, createdAt, updatedAt,
+      fields.customMealName, fields.customMealDescription, fields.customMealImageUri ?? null, fields.servings, fields.notes, createdAt, updatedAt,
     );
   }
 }

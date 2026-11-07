@@ -311,6 +311,45 @@ const migrations: Migration[] = [
       CREATE TABLE user_event_actions (id TEXT PRIMARY KEY NOT NULL, profile_id TEXT NOT NULL REFERENCES collection_profiles(id) ON DELETE CASCADE, user_id TEXT, challenge_id TEXT NOT NULL REFERENCES seasonal_event_challenges(id) ON DELETE CASCADE, source_id TEXT NOT NULL, created_at TEXT NOT NULL, UNIQUE(profile_id, challenge_id, source_id));
     `,
   },
+  {
+    version: 9,
+    sql: `
+      CREATE TABLE app_images (
+        id TEXT PRIMARY KEY NOT NULL,
+        owner_user_id TEXT,
+        local_uri TEXT NOT NULL UNIQUE,
+        original_filename TEXT NOT NULL,
+        mime_type TEXT NOT NULL,
+        file_size INTEGER NOT NULL CHECK(file_size >= 0),
+        width INTEGER NOT NULL CHECK(width > 0),
+        height INTEGER NOT NULL CHECK(height > 0),
+        category TEXT NOT NULL CHECK(category IN ('recipe','fermentation','pantry','profile','note','meal')),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX app_images_category_idx ON app_images(category, created_at DESC);
+      CREATE TABLE image_associations (
+        id TEXT PRIMARY KEY NOT NULL,
+        image_id TEXT NOT NULL REFERENCES app_images(id) ON DELETE CASCADE,
+        entity_type TEXT NOT NULL,
+        entity_id TEXT NOT NULL,
+        role TEXT NOT NULL,
+        position INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        UNIQUE(image_id, entity_type, entity_id, role)
+      );
+      CREATE INDEX image_associations_entity_idx ON image_associations(entity_type, entity_id, role, position);
+      ALTER TABLE pantry_items ADD COLUMN image_local_uri TEXT;
+      ALTER TABLE meal_plan_entries ADD COLUMN custom_meal_image_uri TEXT;
+      ALTER TABLE collection_profiles ADD COLUMN photo_local_uri TEXT;
+      ALTER TABLE achievement_definitions ADD COLUMN asset_id TEXT;
+      ALTER TABLE sticker_definitions ADD COLUMN asset_id TEXT;
+      ALTER TABLE cosmetic_definitions ADD COLUMN asset_id TEXT;
+      ALTER TABLE recipe_design_definitions ADD COLUMN asset_id TEXT;
+      ALTER TABLE seasonal_event_definitions ADD COLUMN banner_asset_id TEXT;
+      CREATE INDEX sticker_definitions_asset_id_idx ON sticker_definitions(asset_id);
+    `,
+  },
 ];
 
 export async function migrateDatabase(database: SQLiteDatabase): Promise<void> {

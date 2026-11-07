@@ -4,7 +4,7 @@ import { PantryItemNotFoundError, validatePantryItem } from '../../features/pant
 
 const selectPantryItem = `SELECT id, user_id AS userId, name, normalized_name AS normalizedName,
   quantity, unit, purchase_date AS purchaseDate, best_before_date AS bestBeforeDate,
-  category, notes, created_at AS createdAt, updated_at AS updatedAt FROM pantry_items`;
+  category, notes, image_local_uri AS imageLocalUri, created_at AS createdAt, updated_at AS updatedAt FROM pantry_items`;
 
 export class PantryRepository {
   constructor(private readonly database: SQLiteDatabase, private readonly createUuid: () => string) {}
@@ -48,10 +48,10 @@ export class PantryRepository {
     await this.database.runAsync(
       `INSERT INTO pantry_items
        (id, user_id, name, normalized_name, quantity, unit, purchase_date, best_before_date,
-        category, notes, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+        category, notes, image_local_uri, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
       id, fields.userId ?? null, fields.name, fields.normalizedName, fields.quantity, fields.unit,
-      fields.purchaseDate, fields.bestBeforeDate, fields.category, fields.notes, now, now,
+      fields.purchaseDate, fields.bestBeforeDate, fields.category, fields.notes, fields.imageLocalUri ?? null, now, now,
     );
     const created = await this.getById(id);
     if (!created) throw new Error('No se pudo recuperar el ingrediente guardado.');
@@ -62,9 +62,9 @@ export class PantryRepository {
     const fields = validatePantryItem(input);
     const result = await this.database.runAsync(
       `UPDATE pantry_items SET user_id = ?, name = ?, normalized_name = ?, quantity = ?, unit = ?,
-       purchase_date = ?, best_before_date = ?, category = ?, notes = ?, updated_at = ? WHERE id = ?;`,
+       purchase_date = ?, best_before_date = ?, category = ?, notes = ?, image_local_uri = ?, updated_at = ? WHERE id = ?;`,
       fields.userId ?? null, fields.name, fields.normalizedName, fields.quantity, fields.unit,
-      fields.purchaseDate, fields.bestBeforeDate, fields.category, fields.notes, new Date().toISOString(), id,
+      fields.purchaseDate, fields.bestBeforeDate, fields.category, fields.notes, fields.imageLocalUri ?? null, new Date().toISOString(), id,
     );
     if (result.changes === 0) throw new PantryItemNotFoundError(id);
     const updated = await this.getById(id);
@@ -75,5 +75,6 @@ export class PantryRepository {
   async delete(id: string): Promise<void> {
     const result = await this.database.runAsync('DELETE FROM pantry_items WHERE id = ?;', id);
     if (result.changes === 0) throw new PantryItemNotFoundError(id);
+    await this.database.runAsync("DELETE FROM image_associations WHERE entity_type='pantry' AND entity_id=?;", id);
   }
 }

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
@@ -9,6 +9,7 @@ import { colors, radii } from '@/constants/theme';
 import { seasons } from '@/features/pantry/seasonal-data';
 import { usePantryRepository } from '@/hooks/usePantryRepository';
 import { useSeasonalProductRepository } from '@/hooks/useSeasonalProductRepository';
+import { useImageRepository } from '@/hooks/useImageRepository';
 import type { PantryItem, Season, SeasonalProduct } from '@/types/pantry';
 
 type PantryView = 'home' | 'seasonal';
@@ -17,6 +18,7 @@ const categoryTones: Record<string, string> = { Fruta: colors.peach, Verdura: co
 export default function PantryScreen() {
   const pantryRepository = usePantryRepository();
   const seasonalRepository = useSeasonalProductRepository();
+  const imageRepository = useImageRepository();
   const [view, setView] = useState<PantryView>('home');
   const [items, setItems] = useState<PantryItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -58,8 +60,9 @@ export default function PantryScreen() {
   const openNewItem = () => { setEditingItem(null); setFormVisible(true); };
   const openEditItem = (item: PantryItem) => { setEditingItem(item); setFormVisible(true); };
   const saveItem = async (fields: Parameters<typeof pantryRepository.create>[0]) => {
-    if (editingItem) await pantryRepository.update(editingItem.id, fields);
-    else await pantryRepository.create(fields);
+    const item = editingItem ? await pantryRepository.update(editingItem.id, fields) : await pantryRepository.create(fields);
+    const image = fields.imageLocalUri ? await imageRepository.getByUri(fields.imageLocalUri) : null;
+    await imageRepository.replaceAssociation(image?.id ?? null, 'pantry', item.id, 'ingredient');
     setFormVisible(false);
     await load();
   };
@@ -159,7 +162,7 @@ function PantryItemCard({ item, onEdit, onDelete }: { item: PantryItem; onEdit: 
   const expired = item.bestBeforeDate ? item.bestBeforeDate < new Date().toISOString().slice(0, 10) : false;
   return (
     <View style={styles.pantryCard}>
-      <View style={[styles.productIcon, { backgroundColor: categoryTones[item.category] ?? '#E9E8DE' }]}><SymbolView name={{ android: pantryIcon(item.category) as never, ios: 'leaf', web: pantryIcon(item.category) as never }} tintColor={colors.greenDark} size={19} /></View>
+      <View style={[styles.productIcon, { backgroundColor: categoryTones[item.category] ?? '#E9E8DE' }]}>{item.imageLocalUri ? <Image source={{ uri: item.imageLocalUri }} style={styles.pantryImage} /> : <SymbolView name={{ android: pantryIcon(item.category) as never, ios: 'leaf', web: pantryIcon(item.category) as never }} tintColor={colors.greenDark} size={19} />}</View>
       <View style={styles.productCopy}>
         <View style={styles.nameRow}><Text numberOfLines={1} style={styles.productName}>{item.name}</Text><Text style={styles.quantity}>{formatQuantity(item.quantity)} {item.unit}</Text></View>
         <Text style={styles.categoryLabel}>{item.category}</Text>
@@ -223,7 +226,7 @@ const styles = StyleSheet.create({
   segment: { marginHorizontal: 22, marginTop: 21, marginBottom: 21, padding: 5, flexDirection: 'row', gap: 5, borderRadius: radii.md, backgroundColor: '#EFEADF' }, segmentItem: { flex: 1, minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 9, paddingVertical: 8, borderRadius: 16 }, segmentItemActive: { backgroundColor: colors.greenDark }, segmentIcon: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: colors.white }, segmentIconActive: { backgroundColor: 'rgba(255,255,255,0.18)' }, segmentCopy: { flex: 1, gap: 3 }, segmentTitle: { color: colors.text, fontSize: 12, fontWeight: '700' }, segmentTitleActive: { color: colors.white }, segmentSub: { color: colors.secondaryText, fontSize: 9 }, segmentSubActive: { color: '#DDE8D5' },
   error: { marginHorizontal: 22, marginBottom: 12, color: '#994D43', fontSize: 12, lineHeight: 18 }, homeSummary: { marginHorizontal: 22, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 11, borderRadius: radii.md, backgroundColor: colors.greenLight }, summaryIcon: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 15, backgroundColor: colors.cream }, summaryCopy: { flex: 1, gap: 3 }, summaryTitle: { color: colors.text, fontSize: 14, fontWeight: '700' }, summarySub: { color: colors.secondaryText, fontSize: 10, lineHeight: 15 }, addButton: { width: 39, height: 39, alignItems: 'center', justifyContent: 'center', borderRadius: 20, backgroundColor: colors.greenDark },
   searchBox: { height: 45, marginHorizontal: 22, marginTop: 16, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 9, borderRadius: 13, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white }, searchInput: { flex: 1, padding: 0, color: colors.text, fontSize: 12 }, chips: { gap: 8, paddingHorizontal: 22, paddingTop: 13, paddingBottom: 5 }, chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: radii.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white }, chipActive: { borderColor: colors.greenDark, backgroundColor: colors.greenDark }, chipText: { color: colors.secondaryText, fontSize: 10, fontWeight: '600' }, chipTextActive: { color: colors.white },
-  sectionHeading: { marginHorizontal: 22, marginTop: 25, marginBottom: 12 }, sectionTitle: { color: colors.text, fontFamily: 'serif', fontSize: 23, fontWeight: '700' }, sectionCaption: { marginTop: 3, color: colors.secondaryText, fontSize: 11 }, pantryCard: { minHeight: 82, marginHorizontal: 22, marginBottom: 9, padding: 11, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radii.sm, backgroundColor: colors.white }, productIcon: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 14 }, productCopy: { flex: 1, minWidth: 0 }, nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 5 }, productName: { flexShrink: 1, color: colors.text, fontSize: 13, fontWeight: '700' }, quantity: { color: colors.greenDark, fontSize: 11, fontWeight: '700' }, categoryLabel: { marginTop: 3, color: colors.secondaryText, fontSize: 10 }, dateLabel: { marginTop: 4, color: colors.secondaryText, fontSize: 9 }, expiredLabel: { color: '#AD5B52', fontWeight: '700' }, itemNote: { marginTop: 4, color: '#777568', fontSize: 10, lineHeight: 14 }, cardActions: { gap: 9, alignItems: 'center' }, smallAction: { width: 27, height: 27, alignItems: 'center', justifyContent: 'center', borderRadius: 14, backgroundColor: colors.background },
+  sectionHeading: { marginHorizontal: 22, marginTop: 25, marginBottom: 12 }, sectionTitle: { color: colors.text, fontFamily: 'serif', fontSize: 23, fontWeight: '700' }, sectionCaption: { marginTop: 3, color: colors.secondaryText, fontSize: 11 }, pantryCard: { minHeight: 82, marginHorizontal: 22, marginBottom: 9, padding: 11, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radii.sm, backgroundColor: colors.white }, productIcon: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 14, overflow: 'hidden' }, pantryImage: { width: '100%', height: '100%' }, productCopy: { flex: 1, minWidth: 0 }, nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 5 }, productName: { flexShrink: 1, color: colors.text, fontSize: 13, fontWeight: '700' }, quantity: { color: colors.greenDark, fontSize: 11, fontWeight: '700' }, categoryLabel: { marginTop: 3, color: colors.secondaryText, fontSize: 10 }, dateLabel: { marginTop: 4, color: colors.secondaryText, fontSize: 9 }, expiredLabel: { color: '#AD5B52', fontWeight: '700' }, itemNote: { marginTop: 4, color: '#777568', fontSize: 10, lineHeight: 14 }, cardActions: { gap: 9, alignItems: 'center' }, smallAction: { width: 27, height: 27, alignItems: 'center', justifyContent: 'center', borderRadius: 14, backgroundColor: colors.background },
   emptyCard: { marginHorizontal: 22, marginTop: 8, padding: 24, alignItems: 'center', borderRadius: radii.md, backgroundColor: colors.white }, emptyIcon: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 17, backgroundColor: colors.greenLight }, emptyTitle: { marginTop: 13, color: colors.text, fontFamily: 'serif', fontSize: 19, fontWeight: '700', textAlign: 'center' }, emptyCopy: { marginTop: 6, color: colors.secondaryText, fontSize: 11, lineHeight: 17, textAlign: 'center' }, emptyAction: { marginTop: 15, paddingHorizontal: 15, paddingVertical: 10, borderRadius: radii.pill, backgroundColor: colors.greenDark }, emptyActionText: { color: colors.white, fontSize: 11, fontWeight: '700' },
   seasonIntro: { marginHorizontal: 22, padding: 15, flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radii.md, backgroundColor: '#F8EDD1' }, seasonIllustration: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 17, backgroundColor: colors.cream }, seasonalGrid: { paddingHorizontal: 22, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 9 }, seasonalCard: { width: '48%', minHeight: 144, padding: 13, borderRadius: radii.sm, backgroundColor: colors.white }, seasonalIcon: { width: 39, height: 39, alignItems: 'center', justifyContent: 'center', borderRadius: 14 }, seasonalCardCopy: { marginTop: 10, gap: 5 }, seasonalNameRow: { gap: 3 }, seasonalCategory: { color: colors.greenDark, fontSize: 9, fontWeight: '700' }, seasonalNote: { color: colors.secondaryText, fontSize: 10, lineHeight: 15 }, seasonFootnote: { marginHorizontal: 22, marginTop: 15, color: colors.secondaryText, fontSize: 10, fontStyle: 'italic' },
 });

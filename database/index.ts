@@ -7,6 +7,7 @@ export { MealPlanRepository } from './repositories/MealPlanRepository';
 export { ShoppingListRepository } from './repositories/ShoppingListRepository';
 export { FermentationRepository } from './repositories/FermentationRepository';
 export { CollectionRepository } from './repositories/CollectionRepository';
+export { ImageRepository } from './repositories/ImageRepository';
 
 import type { SQLiteDatabase } from 'expo-sqlite';
 import * as Crypto from 'expo-crypto';

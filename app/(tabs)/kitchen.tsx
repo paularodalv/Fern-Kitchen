@@ -1,14 +1,34 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 import { AppHeader } from '@/components/AppHeader';
 import { SectionTitle } from '@/components/SectionTitle';
 import { colors, radii } from '@/constants/theme';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { ImageUploadSection } from '@/components/images/ImageUploadSection';
+import { useCollectionRepository } from '@/hooks/useCollectionRepository';
+import { useImageRepository } from '@/hooks/useImageRepository';
 
 const preferences = ['De temporada', 'Sin complicaciones', 'Para compartir'];
 
 export default function KitchenScreen() {
+  const collection = useCollectionRepository();
+  const imageRepository = useImageRepository();
+  const [profileUri, setProfileUri] = useState<string | null>(null);
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    collection.getProfilePhoto().then((profile) => { if (active) setProfileUri(profile.photoLocalUri); }).catch(() => undefined);
+    return () => { active = false; };
+  }, [collection]));
+  const saveProfilePhoto = async (uris: string[]) => {
+    const uri = uris[0] ?? null;
+    setProfileUri(uri);
+    await collection.setProfilePhoto(uri);
+    const profile = await collection.getProfilePhoto();
+    const image = uri ? await imageRepository.getByUri(uri) : null;
+    await imageRepository.replaceAssociation(image?.id ?? null, 'profile', profile.profileId, 'avatar');
+  };
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -24,10 +44,11 @@ export default function KitchenScreen() {
         </Pressable>
 
         <View style={styles.profileCard}>
-          <View style={styles.profileIcon}><SymbolView name={{ android: 'soup_kitchen', ios: 'fork.knife.circle', web: 'soup_kitchen' }} tintColor={colors.greenDark} size={29} /></View>
+          <View style={styles.profileIcon}>{profileUri ? <Image source={{ uri: profileUri }} style={styles.profileImage} onError={() => setProfileUri(null)} /> : <SymbolView name={{ android: 'soup_kitchen', ios: 'fork.knife.circle', web: 'soup_kitchen' }} tintColor={colors.greenDark} size={29} />}</View>
           <View style={{ flex: 1 }}><Text style={styles.profileName}>Tu mesa, tus reglas</Text><Text style={styles.profileHint}>La cocina de cada día puede ser especial.</Text></View>
           <SymbolView name={{ android: 'edit', ios: 'pencil', web: 'edit' }} tintColor={colors.secondaryText} size={18} />
         </View>
+        <View style={styles.upload}><ImageUploadSection category="profile" title="Foto de perfil (opcional)" value={profileUri ? [profileUri] : []} onChange={(uris) => { void saveProfilePhoto(uris).catch(() => undefined); }} /></View>
 
         <View style={styles.section}><SectionTitle title="Así te gusta cocinar" subtitle="Elige lo que te inspira" /></View>
         <View style={styles.preferenceWrap}>
@@ -57,7 +78,7 @@ export default function KitchenScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background }, content: { paddingBottom: 32 }, header: { paddingHorizontal: 22, paddingTop: 5, marginBottom: 27 },
   eyebrow: { marginHorizontal: 22, color: colors.greenDark, fontSize: 10, fontWeight: '800', letterSpacing: 1.3 }, title: { marginHorizontal: 22, marginTop: 5, color: colors.text, fontFamily: 'serif', fontSize: 34, fontWeight: '700' }, lede: { marginHorizontal: 22, marginTop: 5, color: colors.secondaryText, fontSize: 14 },
-  profileCard: { marginHorizontal: 22, marginTop: 23, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radii.md, backgroundColor: colors.greenLight }, profileIcon: { width: 50, height: 50, borderRadius: 17, backgroundColor: colors.cream, alignItems: 'center', justifyContent: 'center' }, profileName: { color: colors.text, fontSize: 15, fontWeight: '700' }, profileHint: { color: colors.secondaryText, fontSize: 11, lineHeight: 16, marginTop: 3 },
+  profileCard: { marginHorizontal: 22, marginTop: 23, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radii.md, backgroundColor: colors.greenLight }, profileIcon: { width: 50, height: 50, borderRadius: 17, backgroundColor: colors.cream, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, profileImage: { width: '100%', height: '100%' }, upload: { marginHorizontal: 22, marginTop: 10 }, profileName: { color: colors.text, fontSize: 15, fontWeight: '700' }, profileHint: { color: colors.secondaryText, fontSize: 11, lineHeight: 16, marginTop: 3 },
   collectionCard: { marginHorizontal: 22, marginTop: 14, minHeight: 86, padding: 15, flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radii.md, backgroundColor: colors.white, shadowColor: colors.text, shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 2 }, collectionIcon: { width: 44, height: 44, borderRadius: 15, backgroundColor: colors.greenLight, alignItems: 'center', justifyContent: 'center' }, collectionTitle: { color: colors.text, fontSize: 14, fontWeight: '700' }, collectionHint: { color: colors.secondaryText, fontSize: 11, lineHeight: 16, marginTop: 3 },
   section: { marginHorizontal: 22, marginTop: 31, marginBottom: 2 }, preferenceWrap: { marginHorizontal: 22, flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, preference: { minHeight: 38, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderRadius: radii.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white }, preferenceActive: { borderColor: colors.greenLight, backgroundColor: colors.greenLight }, preferenceText: { color: colors.secondaryText, fontSize: 11, fontWeight: '600' }, preferenceTextActive: { color: colors.greenDark },
   tipCard: { marginHorizontal: 22, marginTop: 27, padding: 17, flexDirection: 'row', gap: 12, borderRadius: radii.md, backgroundColor: '#F8EDD1' }, tipIcon: { width: 36, height: 36, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.cream }, tipCopy: { flex: 1, gap: 6 }, tipTitle: { color: colors.text, fontSize: 14, fontWeight: '700' }, tipText: { color: '#77705E', fontSize: 12, lineHeight: 19 },

@@ -10,6 +10,7 @@ export type MealPlanEntryFields = {
   customMealDescription: string | null;
   servings: number;
   notes: string;
+  customMealImageUri?: string | null;
   userId?: string | null;
 };
 

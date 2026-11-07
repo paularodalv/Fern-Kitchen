@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SymbolView } from 'expo-symbols';
-import * as ImagePicker from 'expo-image-picker';
+import { ImageUploadSection } from '@/components/images/ImageUploadSection';
 import { colors, radii } from '@/constants/theme';
 import { fermentationTemplates } from '@/features/fermentation/catalog';
 import type { FermentationIngredient, FermentationProjectInput, FermentationStatus } from '@/types/fermentation';
@@ -21,7 +21,7 @@ export function FermentationProjectForm({ onSave, onCancel }: Props) {
   const [ingredientName, setIngredientName] = useState('');
   const [ingredientQuantity, setIngredientQuantity] = useState('');
   const [ingredientUnit, setIngredientUnit] = useState('g');
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [photoUris, setPhotoUris] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -32,13 +32,6 @@ export function FermentationProjectForm({ onSave, onCancel }: Props) {
     setIngredients((items) => [...items, { name: ingredientName.trim(), quantity, unit: ingredientUnit.trim() }]);
     setIngredientName('');
     setIngredientQuantity('');
-  };
-
-  const selectPhoto = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, quality: 0.8 });
-      if (!result.canceled && result.assets[0]) setPhotoUri(result.assets[0].uri);
-    } catch { Alert.alert('No se pudo abrir la galería', 'Puedes continuar sin añadir una foto.'); }
   };
 
   const save = async () => {
@@ -52,7 +45,7 @@ export function FermentationProjectForm({ onSave, onCancel }: Props) {
       await onSave({
         name, fermentationType, customTypeName: fermentationType === 'custom' ? customTypeName : null,
         description, status, startDate, expectedDurationDays: duration ? Number(duration) : null,
-        temperatureNotes, initialPhotoUri: photoUri, personalNotes, ingredients, userId: null,
+        temperatureNotes, initialPhotoUri: photoUris[0] ?? null, personalNotes, ingredients, userId: null,
       });
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'No se pudo guardar el proyecto.'); }
     finally { setSaving(false); }
@@ -74,7 +67,7 @@ export function FermentationProjectForm({ onSave, onCancel }: Props) {
         <View style={styles.ingredientRow}><TextInput value={ingredientName} onChangeText={setIngredientName} placeholder="Harina, agua…" placeholderTextColor={colors.secondaryText} style={[styles.input, styles.ingredientName]} /><TextInput value={ingredientQuantity} onChangeText={setIngredientQuantity} placeholder="Cantidad" keyboardType="decimal-pad" placeholderTextColor={colors.secondaryText} style={[styles.input, styles.ingredientAmount]} /><TextInput value={ingredientUnit} onChangeText={setIngredientUnit} placeholder="Unidad" placeholderTextColor={colors.secondaryText} style={[styles.input, styles.ingredientUnit]} /><Pressable accessibilityRole="button" accessibilityLabel="Añadir ingrediente" onPress={addIngredient} style={styles.add}><Text style={styles.addText}>+</Text></Pressable></View>
         {ingredients.map((item, index) => <View key={`${item.name}-${index}`} style={styles.ingredientPill}><Text style={styles.ingredientText}>{item.name}{item.quantity !== null ? ` · ${item.quantity} ${item.unit}` : ''}</Text><Pressable accessibilityRole="button" accessibilityLabel={`Quitar ${item.name}`} onPress={() => setIngredients((current) => current.filter((_, itemIndex) => itemIndex !== index))}><Text style={styles.remove}>×</Text></Pressable></View>)}
         <Text style={styles.label}>Foto inicial (opcional)</Text>
-        <Pressable accessibilityRole="button" onPress={() => { void selectPhoto(); }} style={styles.photoButton}>{photoUri ? <Image source={{ uri: photoUri }} style={styles.photoPreview} /> : <View style={styles.photoIcon}><SymbolView name={{ android: 'add_a_photo', ios: 'camera', web: 'add_a_photo' }} tintColor={colors.greenDark} size={20} /></View>}<Text style={styles.photoText}>{photoUri ? 'Cambiar fotografía' : 'Elegir una foto de este fermento'}</Text></Pressable>
+        <ImageUploadSection category="fermentation" title="Foto de portada" value={photoUris} onChange={setPhotoUris} />
         <Field label="Notas personales" value={personalNotes} onChangeText={setPersonalNotes} placeholder="Qué quieres recordar…" multiline />
         {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
         <View style={styles.actions}><Pressable accessibilityRole="button" onPress={onCancel} style={styles.cancel}><Text style={styles.cancelText}>Cancelar</Text></Pressable><Pressable accessibilityRole="button" disabled={saving} onPress={() => { void save(); }} style={[styles.save, saving && styles.disabled]}>{saving ? <ActivityIndicator color={colors.white} /> : <Text style={styles.saveText}>Crear proyecto</Text>}</Pressable></View>

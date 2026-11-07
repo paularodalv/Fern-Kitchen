@@ -14,6 +14,7 @@ import { useRecipeRepository } from '@/hooks/useRecipeRepository';
 import { useShoppingListRepository } from '@/hooks/useShoppingListRepository';
 import type { MealPlanEntryFields, MealType, PlannedMeal, ShoppingListItem } from '@/types/meal-planner';
 import type { PantryItem } from '@/types/pantry';
+import { useImageRepository } from '@/hooks/useImageRepository';
 
 type PlannerView = 'week' | 'month' | 'shopping';
 
@@ -22,6 +23,7 @@ export default function MealPlannerScreen() {
   const recipeRepository = useRecipeRepository();
   const shoppingRepository = useShoppingListRepository();
   const pantryRepository = usePantryRepository();
+  const imageRepository = useImageRepository();
   const today = getTodayDate();
   const [view, setView] = useState<PlannerView>('week');
   const [weekStart, setWeekStart] = useState(getWeekStartDate(today));
@@ -94,8 +96,9 @@ export default function MealPlannerScreen() {
   };
 
   const saveEntry = async (fields: MealPlanEntryFields) => {
-    if (editingEntry) await mealRepository.update(editingEntry.id, fields);
-    else await mealRepository.create(fields);
+    const entry = editingEntry ? await mealRepository.update(editingEntry.id, fields) : await mealRepository.create(fields);
+    const image = fields.customMealImageUri ? await imageRepository.getByUri(fields.customMealImageUri) : null;
+    await imageRepository.replaceAssociation(image?.id ?? null, 'meal_plan', entry.id, 'custom_meal');
     setFormVisible(false);
     setView('week');
     setWeekStart(getWeekStartDate(fields.date));
@@ -257,7 +260,7 @@ function EmptyMealSlot({ label, icon, onPress }: { label: string; icon: string; 
 function PlannedMealCard({ entry, mealLabel: typeLabel, onEdit, onDelete, onOpenRecipe }: { entry: PlannedMeal; mealLabel: string; onEdit: () => void; onDelete: () => void; onOpenRecipe: () => void }) {
   return (
     <View style={styles.plannedCard}>
-      {entry.recipeExists && entry.recipeImageLocalUri ? <Image source={{ uri: entry.recipeImageLocalUri }} style={styles.plannedImage} resizeMode="cover" /> : <View style={styles.plannedImagePlaceholder}><SymbolView name={{ android: entry.recipeExists ? 'restaurant' : entry.entryKind === 'custom' ? 'restaurant_menu' : 'info', ios: 'fork.knife', web: entry.recipeExists ? 'restaurant' : 'restaurant_menu' }} tintColor={colors.greenDark} size={19} /></View>}
+      {(entry.recipeExists ? entry.recipeImageLocalUri : entry.entryKind === 'custom' ? entry.customMealImageUri : null) ? <Image source={{ uri: entry.recipeExists ? entry.recipeImageLocalUri! : entry.customMealImageUri! }} style={styles.plannedImage} resizeMode="cover" /> : <View style={styles.plannedImagePlaceholder}><SymbolView name={{ android: entry.recipeExists ? 'restaurant' : entry.entryKind === 'custom' ? 'restaurant_menu' : 'info', ios: 'fork.knife', web: entry.recipeExists ? 'restaurant' : 'restaurant_menu' }} tintColor={colors.greenDark} size={19} /></View>}
       <View style={styles.plannedCopy}>
         <Text style={styles.mealTypeLabel}>{typeLabel.toUpperCase()}</Text>
         <Text numberOfLines={1} style={styles.plannedTitle}>{entryTitle(entry)}</Text>

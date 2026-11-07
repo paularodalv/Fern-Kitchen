@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { colors, radii } from '@/constants/theme';
 import type { PatienceLevel, Recipe, RecipeFields, RecipeSeason } from '@/types/recipe';
+import { ImageUploadSection } from '@/components/images/ImageUploadSection';
 
 type EditableIngredient = { name: string; quantity: string; unit: string; optional: boolean };
 type EditableStep = { title: string; description: string; timerMinutes: string };
@@ -16,7 +17,7 @@ const patienceLevels: PatienceLevel[] = ['Baja', 'Media', 'Alta'];
 export function RecipeForm({ initialRecipe, onSave }: RecipeFormProps) {
   const [title, setTitle] = useState(initialRecipe?.title ?? '');
   const [description, setDescription] = useState(initialRecipe?.description ?? '');
-  const [imageLocalUri, setImageLocalUri] = useState(initialRecipe?.imageLocalUri ?? '');
+  const [imageUris, setImageUris] = useState<string[]>(initialRecipe?.imageLocalUri ? [initialRecipe.imageLocalUri] : []);
   const [idealSeason, setIdealSeason] = useState<RecipeSeason>(initialRecipe?.idealSeason ?? 'Todo el año');
   const [category, setCategory] = useState(initialRecipe?.category ?? '');
   const [totalMinutes, setTotalMinutes] = useState(String(initialRecipe?.totalMinutes ?? ''));
@@ -37,7 +38,7 @@ export function RecipeForm({ initialRecipe, onSave }: RecipeFormProps) {
     const fields: RecipeFields = {
       title,
       description,
-      imageLocalUri: imageLocalUri.trim() || null,
+      imageLocalUri: imageUris[0] ?? null,
       idealSeason,
       category,
       totalMinutes: Number(totalMinutes),
@@ -84,7 +85,7 @@ export function RecipeForm({ initialRecipe, onSave }: RecipeFormProps) {
 
         <Field label="Nombre de la receta *" value={title} onChangeText={setTitle} placeholder="Ej. Tarta de manzana" />
         <Field label="Descripción" value={description} onChangeText={setDescription} placeholder="¿Qué la hace especial?" multiline />
-        <Field label="Imagen local (opcional)" value={imageLocalUri} onChangeText={setImageLocalUri} placeholder="file:///... o assets/images/..." autoCapitalize="none" />
+        <ImageUploadSection category="recipe" title="Foto principal (opcional)" value={imageUris} onChange={setImageUris} />
         <View style={styles.row}>
           <View style={styles.half}><Field label="Categoría *" value={category} onChangeText={setCategory} placeholder="Ej. Horno" /></View>
           <View style={styles.half}><Field label="Tiempo total (min) *" value={totalMinutes} onChangeText={setTotalMinutes} placeholder="35" keyboardType="number-pad" /></View>

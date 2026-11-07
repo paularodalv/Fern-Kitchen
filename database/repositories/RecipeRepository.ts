@@ -174,8 +174,11 @@ export class RecipeRepository {
   }
 
   async delete(id: string): Promise<void> {
-    const result = await this.database.runAsync('DELETE FROM recipes WHERE id = ?;', id);
-    if (result.changes === 0) throw new RecipeNotFoundError(id);
+    await this.database.withTransactionAsync(async () => {
+      const result = await this.database.runAsync('DELETE FROM recipes WHERE id = ?;', id);
+      if (result.changes === 0) throw new RecipeNotFoundError(id);
+      await this.database.runAsync("DELETE FROM image_associations WHERE entity_type='recipe' AND entity_id=?;", id);
+    });
   }
 
   async setFavorite(id: string, isFavorite: boolean): Promise<void> {

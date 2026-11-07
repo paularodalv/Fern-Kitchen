@@ -3,7 +3,8 @@ import { ActivityIndicator, Alert, Image, Modal, Pressable, ScrollView, StyleShe
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import * as ImagePicker from 'expo-image-picker';
+import { ImageUploadSection } from '@/components/images/ImageUploadSection';
+import { useImageRepository } from '@/hooks/useImageRepository';
 import { colors, radii } from '@/constants/theme';
 import { useFermentationRepository } from '@/hooks/useFermentationRepository';
 import { useCollectionRepository } from '@/hooks/useCollectionRepository';
@@ -23,6 +24,7 @@ export default function FermentationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const repository = useFermentationRepository();
   const collectionRepository = useCollectionRepository();
+  const imageRepository = useImageRepository();
   const [project, setProject] = useState<FermentationProject | null>(null);
   const [events, setEvents] = useState<FermentationEvent[]>([]);
   const [batches, setBatches] = useState<FermentationBatch[]>([]);
@@ -41,6 +43,7 @@ export default function FermentationDetailScreen() {
   const [fieldToRecord, setFieldToRecord] = useState<FermentationCustomField | null>(null);
   const [editingReminder, setEditingReminder] = useState<(typeof reminders)[number] | null>(null);
   const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
+  const [photoModal, setPhotoModal] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -83,7 +86,10 @@ export default function FermentationDetailScreen() {
       catch { Alert.alert('Avance guardado', 'Tu registro está en la línea de tiempo, pero no se pudo actualizar el progreso de la colección.'); }
       if (rewards.length) Alert.alert('Un nuevo hito', `Has desbloqueado «${rewards[0]}».`, [{ text: 'Continuar' }]);
     }
-    if (input.photoUri) await repository.addPhoto({ projectId: id, batchId: selectedBatch, eventId: event.id, localUri: input.photoUri, caption: input.description || 'Observación' });
+    if (input.photoUri) {
+      await repository.addPhoto({ projectId: id, batchId: selectedBatch, eventId: event.id, localUri: input.photoUri, caption: input.description || 'Observación' });
+      await imageRepository.associateByUri(input.photoUri, 'fermentation_event', event.id, 'progress');
+    }
     setEventModal(false);
     await load();
   };
@@ -147,14 +153,12 @@ export default function FermentationDetailScreen() {
     setFieldToRecord(null); await load();
   };
 
-  const addPhoto = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, quality: 0.8 });
-      if (!result.canceled && result.assets[0]) {
-        await repository.addPhoto({ projectId: id, batchId: selectedBatch, eventId: null, localUri: result.assets[0].uri, caption: 'Fotografía del fermento' });
-        await load();
-      }
-    } catch (cause) { showError(cause); }
+  const saveProjectPhoto = async (uri: string) => {
+    await repository.addPhoto({ projectId: id, batchId: selectedBatch, eventId: null, localUri: uri, caption: selectedBatch ? 'Fotografía del lote' : 'Fotografía del fermento' });
+    const entityType = selectedBatch ? 'fermentation_batch' : 'fermentation_project';
+    await imageRepository.associateByUri(uri, entityType, selectedBatch ?? id, 'gallery', photos.length);
+    setPhotoModal(false);
+    await load();
   };
 
   if (loading) return <SafeAreaView style={styles.safe}><ActivityIndicator style={styles.loader} color={colors.greenDark} /></SafeAreaView>;
@@ -169,13 +173,14 @@ export default function FermentationDetailScreen() {
         {section === 'overview' ? <OverviewSection project={project} events={events} reminders={reminders} onStatus={changeStatus} onLog={() => setEventModal(true)} onTask={() => setReminderModal(true)} onBatch={() => setBatchModal(true)} onCalculators={() => setCalculatorModal(true)} /> : null}
         {section === 'timeline' ? <TimelineSection events={events.filter((event) => event.batchId === selectedBatch)} onAdd={() => setEventModal(true)} /> : null}
         {section === 'measurements' ? <MeasurementSection events={measuredEvents} fields={fields} history={repository.listCustomFieldHistory.bind(repository)} onAddField={() => setFieldModal(true)} onLogField={logFieldValue} onDeleteField={deleteField} onRecord={() => setEventModal(true)} batchId={selectedBatch} /> : null}
-        {section === 'notes' ? <NotesSection project={project} events={events} photos={photos} onAddNote={() => setEventModal(true)} onAddPhoto={() => { void addPhoto(); }} /> : null}
+        {section === 'notes' ? <NotesSection project={project} events={events} photos={photos} onAddNote={() => setEventModal(true)} onAddPhoto={() => setPhotoModal(true)} /> : null}
         {section === 'batches' ? <BatchSection batches={batches} selectedBatch={selectedBatch} onSelect={setSelectedBatch} onAdd={() => setBatchModal(true)} onDelete={deleteBatch} onStatusChange={() => { void load(); }} /> : null}
         {section === 'tasks' ? <ReminderSection reminders={reminders} onAdd={() => { setEditingReminder(null); setReminderModal(true); }} onToggle={(reminder) => { void toggleReminder(reminder).catch(showError); }} onDelete={deleteReminder} onEdit={(reminder) => { setEditingReminder(reminder); setReminderModal(true); }} /> : null}
         {section === 'calculators' ? <CalculatorSection onSave={(description, measurements, ingredients) => { void saveEvent({ eventType: 'measurement', description, notes: 'Cálculo personal guardado; no es una evaluación de seguridad.', measurements, ingredients, photoUri: null }); }} /> : null}
         <View style={styles.safetyCard}><Text style={styles.safetyTitle}>Información de seguridad</Text><Text style={styles.safety}>Este laboratorio conserva observaciones personales, no es una guía de conservación. El tiempo y el pH por sí solos no garantizan la seguridad. Si un producto muestra señales de deterioro, no lo pruebes y consulta orientación fiable de seguridad alimentaria.</Text></View>
       </ScrollView>
       {eventModal ? <EventForm batchId={selectedBatch} allowFeeding={supportsFeeding} onCancel={() => setEventModal(false)} onSave={saveEvent} /> : null}
+      {photoModal ? <Modal visible animationType="slide" onRequestClose={() => setPhotoModal(false)}><View style={styles.modalScreen}><ModalHeader title="Añadir fotografía" onClose={() => setPhotoModal(false)} /><View style={styles.modalContent}><ImageUploadSection category="fermentation" title="Fotos del fermento" value={[]} onChange={(uris) => { if (uris[0]) void saveProjectPhoto(uris[0]).catch(showError); }} /></View></View></Modal> : null}
       {batchModal ? <BatchForm projectId={id} onCancel={() => setBatchModal(false)} onSave={saveBatch} /> : null}
       {reminderModal ? <ReminderForm key={editingReminder?.id ?? 'new'} projectId={id} batchId={selectedBatch} allowFeeding={supportsFeeding} initialReminder={editingReminder} onCancel={() => { setReminderModal(false); setEditingReminder(null); }} onSave={saveReminder} /> : null}
       {fieldModal ? <FieldForm onCancel={() => setFieldModal(false)} onSave={saveField} /> : null}
@@ -274,14 +279,9 @@ function EventForm({ batchId, allowFeeding, onCancel, onSave }: { batchId: strin
   const [ratioFlour, setRatioFlour] = useState('1');
   const [ratioWater, setRatioWater] = useState('1');
   const [flourUnit, setFlourUnit] = useState('g');
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [photoUris, setPhotoUris] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-
-  const choosePhoto = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, quality: 0.8 });
-    if (!result.canceled && result.assets[0]) setPhotoUri(result.assets[0].uri);
-  };
 
   const submit = async () => {
     setError('');
@@ -311,7 +311,7 @@ function EventForm({ batchId, allowFeeding, onCancel, onSave }: { batchId: strin
       } catch (cause) { setError(cause instanceof Error ? cause.message : 'Revisa las cantidades.'); return; }
     }
     setSaving(true);
-    try { await onSave({ eventType, eventDate, description: eventDescription, notes, measurements, ingredients, photoUri }); }
+    try { await onSave({ eventType, eventDate, description: eventDescription, notes, measurements, ingredients, photoUri: photoUris[0] ?? null }); }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'No se pudo guardar la observación.'); }
     finally { setSaving(false); }
   };
@@ -322,7 +322,7 @@ function EventForm({ batchId, allowFeeding, onCancel, onSave }: { batchId: strin
   return <Modal visible animationType="slide" onRequestClose={onCancel}><View style={styles.modalScreen}><ModalHeader title="Añadir al diario" onClose={onCancel} /><ScrollView contentContainerStyle={styles.modalContent} keyboardShouldPersistTaps="handled"><Text style={styles.label}>Tipo de registro</Text><View style={styles.typeRow}>{eventOptions.map((item) => <Pressable key={item.id} onPress={() => setEventType(item.id)} style={[styles.typeChip, eventType === item.id && styles.typeChipActive]}><Text style={[styles.typeText, eventType === item.id && styles.typeTextActive]}>{item.label}</Text></Pressable>)}</View><Field label="Fecha y hora" value={eventAt} onChangeText={setEventAt} placeholder="AAAA-MM-DD HH:mm" />
     {eventType === 'feeding' ? <><Text style={styles.label}>Proporción de alimentación</Text><View style={styles.formRow}><Field label="Masa madre" value={starter} onChangeText={setStarter} placeholder="50" keyboardType="decimal-pad" /><Field label="Harina · partes" value={ratioFlour} onChangeText={setRatioFlour} placeholder="1" keyboardType="decimal-pad" /><Field label="Agua · partes" value={ratioWater} onChangeText={setRatioWater} placeholder="1" keyboardType="decimal-pad" /></View><Field label="Unidad de peso" value={flourUnit} onChangeText={setFlourUnit} placeholder="g" /></> : null}
     {eventType === 'measurement' || eventType === 'feeding' || measureValue ? <View style={styles.formRow}><Field label="Medida opcional" value={measureName} onChangeText={setMeasureName} placeholder="Temperatura, pH…" /><Field label="Valor" value={measureValue} onChangeText={setMeasureValue} placeholder="20" keyboardType="decimal-pad" /><Field label="Unidad" value={measureUnit} onChangeText={setMeasureUnit} placeholder="°C" /></View> : null}
-    {eventType !== 'feeding' ? <Field label="Descripción" value={description} onChangeText={setDescription} placeholder="Qué has observado" multiline /> : null}<Field label="Observaciones" value={notes} onChangeText={setNotes} placeholder="Aroma, textura, cambios…" multiline /><Pressable accessibilityRole="button" onPress={() => { void choosePhoto(); }} style={styles.photoPicker}><Text style={styles.outlineText}>{photoUri ? 'Foto añadida · cambiar' : 'Añadir una fotografía'}</Text></Pressable>{error ? <Text style={styles.formError}>{error}</Text> : null}<PrimaryButton title="Guardar en el diario" loading={saving} onPress={() => { void submit(); }} /></ScrollView></View></Modal>;
+    {eventType !== 'feeding' ? <Field label="Descripción" value={description} onChangeText={setDescription} placeholder="Qué has observado" multiline /> : null}<Field label="Observaciones" value={notes} onChangeText={setNotes} placeholder="Aroma, textura, cambios…" multiline /><ImageUploadSection category="fermentation" title="Foto de esta observación" value={photoUris} onChange={setPhotoUris} />{error ? <Text style={styles.formError}>{error}</Text> : null}<PrimaryButton title="Guardar en el diario" loading={saving} onPress={() => { void submit(); }} /></ScrollView></View></Modal>;
 }
 
 function BatchForm({ projectId, onCancel, onSave }: { projectId: string; onCancel: () => void; onSave: (batch: { name: string; startDate: string; notes: string; ingredients: FermentationIngredient[] }) => Promise<void> }) {

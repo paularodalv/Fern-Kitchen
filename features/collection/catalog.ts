@@ -14,7 +14,7 @@ export const ACHIEVEMENTS = [
   { id: 'completed-fermentation', name: 'Con paciencia', description: 'Completa un proyecto de fermentación.', category: 'Fermentación', icon: 'spa', hint: 'Marca como completado un proyecto de fermentación.', xp: 35, sort: 4 },
   { id: 'three-recipes-prepared', name: 'Tres buenos momentos', description: 'Prepara tres recetas distintas.', category: 'Exploración y aprendizaje', icon: 'favorite', hint: 'Prepara recetas diferentes.', xp: 30, sort: 5 },
   { id: 'autumn-cook', name: 'Cocina de otoño', description: 'Completa una propuesta de temporada otoñal.', category: 'Cocina de temporada', icon: 'park', hint: 'Completa un reto de temporada.', xp: 20, sort: 6 },
-] as const;
+].map((item) => ({ ...item, assetId: `achievement_${item.id.replaceAll('-', '_')}` }));
 
 export const STICKERS = [
   ['bread-loaf', 'Hogaza dorada', 'Un pan hecho con calma.', 'bakery', '🥖', 'prepared', 'first', 'comun'],
@@ -25,7 +25,7 @@ export const STICKERS = [
   ['autumn-leaf', 'Hoja de otoño', 'Un guiño a la cocina de temporada.', 'seasons', '🍂', 'event', 'autumn-table', 'especial'],
   ['mouse-apron', 'Delantal de Fern', 'Un detalle para celebrar tus avances.', 'special', '🐭', 'event', 'winter-table', 'raro'],
   ['spring-bloom', 'Flor nueva', 'Un recuerdo de tus observaciones de primavera.', 'seasons', '🌱', 'event', 'spring-table', 'especial'],
-].map(([id, name, description, collection, icon, unlockType, unlockValue, rarity], index) => ({ id, name, description, collection, icon, unlockType, unlockValue, rarity, sort: index + 1, assetPath: `assets/stickers/${collection}/${id}.png` }));
+].map(([id, name, description, collection, icon, unlockType, unlockValue, rarity], index) => ({ id, name, description, collection, icon, unlockType, unlockValue, rarity, sort: index + 1, assetId: `sticker_${String(id).replaceAll('-', '_')}` }));
 
 export const STICKER_COLLECTIONS = [
   { id: 'bakery', name: 'Panadería', description: 'Harina, horno y panes hechos con calma.', reward: 'Borde de panadero', sort: 1 },
@@ -49,7 +49,7 @@ export const COSMETICS = [
   { id: 'collection-ferment-accessory', kind: 'accessory', name: 'Burbuja fermentista', icon: 'bubble_chart', description: 'Completa la colección Fermentos.', default: false, unlockType: 'sticker_collection', unlockValue: 'fermentation' },
   { id: 'collection-preserve-background', kind: 'background', name: 'Fondo de conserva', icon: 'inventory_2', description: 'Completa la colección Conservas.', default: false, unlockType: 'sticker_collection', unlockValue: 'preserves' },
   { id: 'collection-special-accessory', kind: 'accessory', name: 'Estrellita de Fern', icon: 'stars', description: 'Completa la colección Especiales.', default: false, unlockType: 'sticker_collection', unlockValue: 'special' },
-];
+].map((item) => ({ ...item, assetId: `cosmetic_${item.id.replaceAll('-', '_')}` }));
 
 export const RECIPE_DESIGNS = [
   { id: 'classic', name: 'Cuaderno clásico', description: 'Papel crema y tinta verde.', accent: '#548B35', background: '#FFF8EB', icon: 'menu_book', unlock: 'default', value: '' },
@@ -59,7 +59,7 @@ export const RECIPE_DESIGNS = [
   { id: 'autumn', name: 'Otoño', description: 'Colores de cosecha.', accent: '#8D5A2B', background: '#F7E9D0', icon: 'park', unlock: 'event', value: 'autumn-table' },
   { id: 'spring', name: 'Primavera', description: 'Verde nuevo y luz.', accent: '#548B35', background: '#EAF2D8', icon: 'local_florist', unlock: 'level', value: '2' },
   { id: 'festive', name: 'Especial festivo', description: 'Para compartir en días especiales.', accent: '#9D4F45', background: '#F8E8DD', icon: 'celebration', unlock: 'event', value: 'winter-table' },
-].map((item, index) => ({ ...item, sort: index + 1 }));
+].map((item, index) => ({ ...item, sort: index + 1, assetId: `recipe_design_${item.id.replaceAll('-', '_')}` }));
 
 export const EVENTS = [
   { id: 'autumn-table', title: 'Otoño en la cocina', description: 'Celebra los ingredientes de temporada y guarda un nuevo recuerdo en tu cuaderno.', starts: '2026-10-01', ends: '2026-12-01', icon: 'park', reward: 'Hoja de otoño', challenge: { id: 'autumn-recipe', title: 'Una receta de temporada', description: 'Crea una receta personal con estación Otoño.', action: 'autumn_recipe', target: 1, xp: 20, sticker: 'autumn-leaf' } },
@@ -67,4 +67,4 @@ export const EVENTS = [
   { id: 'winter-table', title: 'Navidad casera', description: 'Pequeños preparativos para una mesa compartida.', starts: '2026-12-01', ends: '2027-01-07', icon: 'cookie', reward: 'Un estilo festivo y el delantal de Fern', challenge: { id: 'winter-recipe', title: 'Un detalle para compartir', description: 'Prepara una receta en modo de cocina.', action: 'prepared_recipe', target: 1, xp: 20, sticker: 'mouse-apron' } },
   { id: 'spring-table', title: 'Primavera fermentista', description: 'Sigue con curiosidad los cambios de tus fermentos.', starts: '2027-03-01', ends: '2027-05-31', icon: 'local_florist', reward: 'Estilo de primavera y una flor', challenge: { id: 'spring-ferment', title: 'Anota un cambio', description: 'Registra una observación en el laboratorio.', action: 'fermentation_event', target: 1, xp: 20, sticker: 'spring-bloom' } },
   { id: 'summer-table', title: 'Verano de conservas', description: 'Guarda ideas para disfrutar la temporada más adelante.', starts: '2027-06-01', ends: '2027-08-31', icon: 'wb_sunny', reward: 'Estilo de verano y un tarro de conserva', challenge: { id: 'summer-recipe', title: 'Añade una receta de verano', description: 'Crea una receta personal de verano.', action: 'summer_recipe', target: 1, xp: 20, sticker: 'preserve-jar' } },
-];
+].map((item) => ({ ...item, assetId: `event_${item.id.replaceAll('-', '_')}` }));

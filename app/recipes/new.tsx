@@ -4,12 +4,16 @@ import type { RecipeFields } from '@/types/recipe';
 import { router } from 'expo-router';
 import { Alert } from 'react-native';
 import { useCollectionRepository } from '@/hooks/useCollectionRepository';
+import { useImageRepository } from '@/hooks/useImageRepository';
 
 export default function CreateRecipeScreen() {
   const repository = useRecipeRepository();
   const collection = useCollectionRepository();
+  const images = useImageRepository();
   const save = async (fields: RecipeFields) => {
     const recipe = await repository.create(fields);
+    const cover = fields.imageLocalUri ? await images.getByUri(fields.imageLocalUri) : null;
+    await images.replaceAssociation(cover?.id ?? null, 'recipe', recipe.id, 'cover');
     const openRecipe = () => router.replace({ pathname: '/recipes/[id]', params: { id: recipe.id } });
     let rewards: string[];
     try {
