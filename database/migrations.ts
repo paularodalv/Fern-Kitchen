@@ -119,6 +119,47 @@ const migrations: Migration[] = [
       CREATE INDEX seasonal_products_normalized_name_idx ON seasonal_products(normalized_name);
     `,
   },
+  {
+    version: 5,
+    sql: `
+      CREATE TABLE meal_plan_entries (
+        id TEXT PRIMARY KEY NOT NULL,
+        user_id TEXT,
+        date TEXT NOT NULL,
+        meal_type TEXT NOT NULL CHECK (meal_type IN ('breakfast', 'lunch', 'snack', 'dinner')),
+        entry_kind TEXT NOT NULL CHECK (entry_kind IN ('recipe', 'custom')),
+        recipe_id TEXT REFERENCES recipes(id) ON DELETE SET NULL,
+        custom_meal_name TEXT,
+        custom_meal_description TEXT,
+        servings INTEGER NOT NULL CHECK (servings BETWEEN 1 AND 100),
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        CHECK (entry_kind <> 'custom' OR (recipe_id IS NULL AND length(trim(custom_meal_name)) > 0)),
+        CHECK (entry_kind <> 'recipe' OR (custom_meal_name IS NULL AND custom_meal_description IS NULL))
+      );
+      CREATE UNIQUE INDEX meal_plan_date_type_unique_idx ON meal_plan_entries(date, meal_type);
+      CREATE INDEX meal_plan_date_idx ON meal_plan_entries(date);
+      CREATE INDEX meal_plan_recipe_id_idx ON meal_plan_entries(recipe_id);
+      CREATE TABLE shopping_list_items (
+        id TEXT PRIMARY KEY NOT NULL,
+        user_id TEXT,
+        week_start_date TEXT NOT NULL,
+        name TEXT NOT NULL,
+        normalized_name TEXT NOT NULL,
+        quantity REAL,
+        unit TEXT NOT NULL DEFAULT '',
+        normalized_unit TEXT NOT NULL DEFAULT '',
+        has_quantity INTEGER NOT NULL CHECK (has_quantity IN (0, 1)),
+        is_purchased INTEGER NOT NULL DEFAULT 0 CHECK (is_purchased IN (0, 1)),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE (week_start_date, normalized_name, normalized_unit, has_quantity)
+      );
+      CREATE INDEX shopping_list_week_idx ON shopping_list_items(week_start_date, is_purchased);
+      CREATE INDEX shopping_list_normalized_name_idx ON shopping_list_items(normalized_name);
+    `,
+  },
 ];
 
 export async function migrateDatabase(database: SQLiteDatabase): Promise<void> {

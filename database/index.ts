@@ -3,6 +3,8 @@ export { seedDemoRecipes } from './seedDemoRecipes';
 export { RecipeRepository } from './repositories/RecipeRepository';
 export { PantryRepository } from './repositories/PantryRepository';
 export { SeasonalProductRepository } from './repositories/SeasonalProductRepository';
+export { MealPlanRepository } from './repositories/MealPlanRepository';
+export { ShoppingListRepository } from './repositories/ShoppingListRepository';
 
 import type { SQLiteDatabase } from 'expo-sqlite';
 import * as Crypto from 'expo-crypto';

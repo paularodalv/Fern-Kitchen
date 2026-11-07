@@ -1,0 +1,31 @@
+{
+  "format": "v0-jsonl",
+  "pid": 29892,
+  "startedAt": 1794051847929,
+  "command": "expo export",
+  "cwd": "C:\\Users\\minro\\OneDrive - Educacyl\\Escritorio\\Fern Kitchen",
+  "maxSegments": 3,
+  "socket": "\\\\.\\pipe\\event-log-29892-mw6c5ddl-b4kd7i-live",
+  "ipcSocket": "\\\\.\\pipe\\event-log-29892-mw6c5ddl-b4kd7i-ipc",
+  "origin": {
+    "argv": [
+      "C:\\Users\\minro\\OneDrive - Educacyl\\Escritorio\\Fern Kitchen\\node_modules\\expo\\bin\\cli",
+      "export",
+      "--platform",
+      "android",
+      "--output-dir",
+      ".tmp-meal-planner-export"
+    ],
+    "execPath": "C:\\Program Files\\nodejs\\node.exe",
+    "cwd": "C:\\Users\\minro\\OneDrive - Educacyl\\Escritorio\\Fern Kitchen",
+    "ppid": 10064,
+    "env": {
+      "npmLifecycleEvent": "npx",
+      "npmExecPath": "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js",
+      "npmPackageName": "fern-kitchen"
+    }
+  },
+  "metadata": {
+    "version": "58.1.19"
+  }
+}
