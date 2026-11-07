@@ -4,19 +4,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { AppHeader } from '@/components/AppHeader';
-import { FermentationProjectForm } from '@/components/FermentationProjectForm';
 import { colors, radii } from '@/constants/theme';
 import { useFermentationRepository } from '@/hooks/useFermentationRepository';
 import { getFermentationLabel, fermentationStatuses } from '@/features/fermentation/catalog';
 import { LocalNotificationService } from '@/services/LocalNotificationService';
 import { expoLocalNotificationAdapter } from '@/services/expoLocalNotificationAdapter';
-import type { FermentationProject, FermentationProjectInput, FermentationReminder } from '@/types/fermentation';
+import type { FermentationProject, FermentationReminder } from '@/types/fermentation';
 
 export default function FermentationLabScreen() {
   const repository = useFermentationRepository();
   const [projects, setProjects] = useState<FermentationProject[]>([]);
   const [reminders, setReminders] = useState<FermentationReminder[]>([]);
-  const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -32,20 +30,6 @@ export default function FermentationLabScreen() {
   }, [repository]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
-
-  const saveProject = async (input: FermentationProjectInput) => {
-    const project = await repository.createProject(input);
-    const template = project.fermentationType;
-    const { fermentationTemplates } = await import('@/features/fermentation/catalog');
-    const selectedTemplate = fermentationTemplates.find((item) => item.id === template);
-    if (selectedTemplate) {
-      for (const field of selectedTemplate.suggestedFields) {
-        await repository.createCustomField({ projectId: project.id, batchId: null, name: field.name, fieldType: field.type, unit: field.unit ?? '' });
-      }
-    }
-    setShowForm(false);
-    router.push({ pathname: '/fermentation-lab/[id]', params: { id: project.id } } as never);
-  };
 
   const completeReminder = (reminder: FermentationReminder) => Alert.alert('Marcar tarea', `¿Has completado «${reminder.title}»?`, [
     { text: 'Ahora no', style: 'cancel' },
@@ -72,20 +56,19 @@ export default function FermentationLabScreen() {
 
         <View style={styles.summaryRow}><Summary label="En marcha" count={activeProjects.length} tint={colors.greenLight} /><Summary label="En pausa" count={pausedProjects.length} tint="#F8EDD1" /><Summary label="Terminados" count={completedProjects.length} tint="#F7E2DE" /></View>
 
-        <View style={styles.sectionHeader}><View><Text style={styles.sectionTitle}>Tus fermentos</Text><Text style={styles.sectionSub}>Cada uno sigue su propio camino</Text></View><Pressable accessibilityRole="button" onPress={() => setShowForm(true)} style={styles.createButton}><Text style={styles.createPlus}>+</Text><Text style={styles.createLabel}>Nuevo</Text></Pressable></View>
+        <View style={styles.sectionHeader}><View><Text style={styles.sectionTitle}>Tus fermentos</Text><Text style={styles.sectionSub}>Cada uno sigue su propio camino</Text></View><Pressable accessibilityRole="button" onPress={() => router.push('/fermentation-lab/new' as never)} style={styles.createButton}><Text style={styles.createPlus}>+</Text><Text style={styles.createLabel}>Nuevo</Text></Pressable></View>
         {loading ? <ActivityIndicator style={styles.loader} color={colors.greenDark} /> : error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : projects.length ? <>
           <ProjectGroup title="En marcha" projects={activeProjects} />
           <ProjectGroup title="En pausa" projects={pausedProjects} />
           <ProjectGroup title="Completados" projects={completedProjects} />
           <ProjectGroup title="Descartados" projects={discardedProjects} />
-        </> : <EmptyLab onCreate={() => setShowForm(true)} />}
+        </> : <EmptyLab onCreate={() => router.push('/fermentation-lab/new' as never)} />}
 
         {reminders.length ? <View style={styles.tasksSection}><Text style={styles.sectionTitle}>Próximas tareas</Text><Text style={styles.sectionSub}>Pequeños recordatorios a tu ritmo</Text>{reminders.map((reminder) => <Pressable key={reminder.id} accessibilityRole="button" onPress={() => completeReminder(reminder)} style={styles.taskCard}><View style={styles.taskIcon}><SymbolView name={{ android: 'notifications_active', ios: 'bell', web: 'notifications_active' }} tintColor={colors.greenDark} size={18} /></View><View style={styles.taskCopy}><Text style={styles.taskTitle}>{reminder.title}</Text><Text style={styles.taskDate}>{formatDateTime(reminder.scheduledAt)}</Text></View><Text style={styles.taskDone}>Hecha</Text></Pressable>)}</View> : null}
 
         {projects.length ? <View style={styles.recentSection}><Text style={styles.sectionTitle}>Actualizados hace poco</Text>{projects.slice(0, 3).map((project) => <Pressable key={project.id} onPress={() => router.push({ pathname: '/fermentation-lab/[id]', params: { id: project.id } } as never)} style={styles.recentRow}><Text style={styles.recentBullet}>✳</Text><Text style={styles.recentName}>{project.name}</Text><Text style={styles.recentDate}>{formatDateTime(project.updatedAt)}</Text></Pressable>)}</View> : null}
         <Text style={styles.disclaimer}>El laboratorio es un registro personal, no una guía de conservación. El tiempo y las mediciones no garantizan la seguridad de un fermento.</Text>
       </ScrollView>
-      {showForm ? <FermentationProjectForm onCancel={() => setShowForm(false)} onSave={saveProject} /> : null}
     </SafeAreaView>
   );
 }

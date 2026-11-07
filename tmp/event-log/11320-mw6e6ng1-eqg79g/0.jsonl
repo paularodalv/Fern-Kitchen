@@ -1,0 +1,32 @@
+{"_e":"root:init","_t":1794055266871.120,"version":"58.1.19"}
+{"_e":"env:mode","_t":1794055266999.900,"nodeEnv":"production","mode":"production"}
+{"_e":"env:load","_t":1794055267002.847,"mode":"production","files":[],"keys":[]}
+{"_e":"devserver:start","_t":1794055267463.800,"mode":"production","web":true,"baseUrl":"","asyncRoutes":true,"routerRoot":"app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":true}
+{"_e":"metro:config","_t":1794055267851.424,"serverRoot":".","projectRoot":".","exporting":true,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"metro:instantiate","_t":1794055268352.053,"_d":887.8442,"atlas":false,"workers":8,"host":null,"port":null}
+{"_e":"devserver:url","_t":1794055268356.943,"bundler":"metro","url":"http://192.168.0.18:8081","runtimeUrl":"exp://192.168.0.18:8081?__expo_disable_fab=1&__expo_disable_auto_launch=1&__expo_disable_onboarding=1","hostType":null,"port":8081}
+{"_e":"filemap:build","_t":1794055268963.024,"_d":612.2779,"crawler":"node","fromCache":true}
+{"_e":"metro:bundling:start","_t":1794055269088.635,"id":"1","platform":"android","environment":null,"entry":"node_modules\\expo-router\\entry.js","bundleType":"module","dev":false,"minify":true}
+{"_e":"metro:bundling:progress","_t":1794055269099.602,"id":"1","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1794055269197.275,"id":"1","progress":0.06698961937716265,"total":255,"current":66}
+{"_e":"metro:bundling:progress","_t":1794055269296.761,"id":"1","progress":0.24606305363308287,"total":506,"current":251}
+{"_e":"metro:bundling:progress","_t":1794055269397.974,"id":"1","progress":0.354537012949474,"total":744,"current":443}
+{"_e":"metro:bundling:progress","_t":1794055269498.784,"id":"1","progress":0.8110058986923006,"total":895,"current":806}
+{"_e":"metro:bundling:progress","_t":1794055269598.663,"id":"1","progress":0.8928573608092474,"total":1071,"current":1012}
+{"_e":"metro:bundling:progress","_t":1794055269707.873,"id":"1","progress":0.9982150829081633,"total":1120,"current":1119}
+{"_e":"metro:worker_log","_t":1794055270071.679,"stream":"stderr","data":"(node:11320) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"}
+{"_e":"metro:bundling:progress","_t":1794055270111.366,"id":"1","progress":0.999,"total":1120,"current":1120}
+{"_e":"root:init","_t":1794055269418.137,"_w":"worker_thread:1"}
+{"_e":"metro:bundling:progress","_t":1794055270212.592,"id":"1","progress":0.999,"total":1153,"current":1127}
+{"_e":"metro:bundling:progress","_t":1794055270312.267,"id":"1","progress":0.999,"total":1284,"current":1184}
+{"_e":"metro:bundling:progress","_t":1794055270411.718,"id":"1","progress":0.999,"total":1479,"current":1376}
+{"_e":"metro:bundling:progress","_t":1794055270512.873,"id":"1","progress":0.999,"total":1591,"current":1545}
+{"_e":"metro:bundling:progress","_t":1794055270627.325,"id":"1","progress":0.999,"total":1680,"current":1679}
+{"_e":"metro:worker_log","_t":1794055271611.472,"stream":"stderr","data":"(node:11320) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"}
+{"_e":"metro:bundling:progress","_t":1794055271670.797,"id":"1","progress":0.999,"total":1680,"current":1680}
+{"_e":"root:init","_t":1794055270676.468,"_w":"worker_thread:2"}
+{"_e":"metro:bundling:progress","_t":1794055271823.664,"id":"1","progress":0.999,"total":1681,"current":1681}
+{"_e":"metro:bundling:done","_t":1794055279893.756,"_d":10805.1339,"id":"1","platform":"android","environment":null,"entry":"node_modules\\expo-router\\entry.js","total":1681}
+{"_e":"export:bundle","_t":1794055279894.795,"platform":"android","assets":16,"ms":11535}
+{"_e":"devserver:stop","_t":1794055279904.535,"bundler":"metro","ms":1}
+{"_e":"export:done","_t":1794055280013.682,"_d":12574.7897,"platforms":["android"],"outputDir":".tmp-fermentation-route-check","mode":"single","dev":false}
