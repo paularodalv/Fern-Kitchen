@@ -6,6 +6,7 @@ import { SymbolView } from 'expo-symbols';
 import * as ImagePicker from 'expo-image-picker';
 import { colors, radii } from '@/constants/theme';
 import { useFermentationRepository } from '@/hooks/useFermentationRepository';
+import { useCollectionRepository } from '@/hooks/useCollectionRepository';
 import { fermentationStatuses, fermentationTemplates, getFermentationLabel } from '@/features/fermentation/catalog';
 import { calculateBrineSalt, calculateHydration, calculateSourdoughFeeding } from '@/features/fermentation/calculators';
 import { expoLocalNotificationAdapter } from '@/services/expoLocalNotificationAdapter';
@@ -21,6 +22,7 @@ const sections: { id: DetailSection; label: string }[] = [
 export default function FermentationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const repository = useFermentationRepository();
+  const collectionRepository = useCollectionRepository();
   const [project, setProject] = useState<FermentationProject | null>(null);
   const [events, setEvents] = useState<FermentationEvent[]>([]);
   const [batches, setBatches] = useState<FermentationBatch[]>([]);
@@ -59,7 +61,15 @@ export default function FermentationDetailScreen() {
   const changeStatus = () => {
     if (!project) return;
     const options = fermentationStatuses.map((item) => ({ text: item.label, onPress: () => {
-      void repository.setProjectStatus(project.id, item.id).then(load).catch(showError);
+      void repository.setProjectStatus(project.id, item.id).then(async () => {
+        if (item.id === 'completed') {
+          let rewards: string[] = [];
+          try { rewards = await collectionRepository.recordAction('fermentation_completed', project.id); }
+          catch { Alert.alert('Estado guardado', 'El proyecto se marcó como completado, pero no se pudo actualizar el progreso de la colección.'); }
+          if (rewards.length) Alert.alert('Un nuevo hito', `Has desbloqueado «${rewards[0]}».`, [{ text: 'Continuar' }]);
+        }
+        await load();
+      }).catch(showError);
     } }));
     Alert.alert('Estado del fermento', 'Elige el estado que mejor refleja tu seguimiento.', [...options, { text: 'Cancelar', style: 'cancel' }]);
   };
@@ -67,6 +77,12 @@ export default function FermentationDetailScreen() {
   const saveEvent = async (input: { eventType: FermentationEventType; description: string; notes: string; measurements: FermentationMeasurement[]; ingredients: FermentationIngredient[]; photoUri: string | null; eventDate?: string }) => {
     const eventDate = input.eventDate ?? new Date().toISOString();
     const event = await repository.createEvent({ projectId: id, batchId: selectedBatch, eventType: input.eventType, eventDate, description: input.description, notes: input.notes, measurements: input.measurements, ingredients: input.ingredients });
+    if (['feeding', 'measurement', 'observation', 'note'].includes(input.eventType)) {
+      let rewards: string[] = [];
+      try { rewards = await collectionRepository.recordAction('fermentation_event', event.id); }
+      catch { Alert.alert('Avance guardado', 'Tu registro está en la línea de tiempo, pero no se pudo actualizar el progreso de la colección.'); }
+      if (rewards.length) Alert.alert('Un nuevo hito', `Has desbloqueado «${rewards[0]}».`, [{ text: 'Continuar' }]);
+    }
     if (input.photoUri) await repository.addPhoto({ projectId: id, batchId: selectedBatch, eventId: event.id, localUri: input.photoUri, caption: input.description || 'Observación' });
     setEventModal(false);
     await load();

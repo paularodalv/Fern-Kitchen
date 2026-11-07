@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
@@ -8,13 +8,36 @@ import { colors, radii } from '@/constants/theme';
 import { formatQuantity, scaleQuantity } from '@/features/recipes/portion-scaling';
 import { useRecipeRepository } from '@/hooks/useRecipeRepository';
 import type { Recipe } from '@/types/recipe';
+import { useCollectionRepository } from '@/hooks/useCollectionRepository';
 
 export default function CookingModeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const repository = useRecipeRepository();
+  const collection = useCollectionRepository();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
   const [error, setError] = useState('');
+  const [finishing, setFinishing] = useState(false);
+
+  const finishCooking = async () => {
+    if (finishing) return;
+    setFinishing(true);
+    try {
+      let rewards: string[];
+      try { rewards = await collection.recordAction('prepared_recipe', id); }
+      catch {
+        Alert.alert('Receta terminada', 'La receta terminó, pero no se pudo actualizar el progreso de la colección.', [{ text: 'Continuar', onPress: () => router.back() }]);
+        return;
+      }
+      if (rewards.length) Alert.alert('Un nuevo hito', `Has desbloqueado «${rewards[0]}».`, [
+        { text: 'Ver colección', onPress: () => router.replace('/collection' as never) },
+        { text: 'Continuar', onPress: () => router.back() },
+      ]);
+      else router.back();
+    } catch (cause) {
+      Alert.alert('No se pudo guardar el avance', cause instanceof Error ? cause.message : 'Inténtalo de nuevo.');
+    } finally { setFinishing(false); }
+  };
 
   useEffect(() => {
     let active = true;
@@ -74,7 +97,7 @@ export default function CookingModeScreen() {
             <Text style={styles.nextText}>Siguiente</Text><SymbolView name={{ android: 'arrow_forward', ios: 'arrow.right', web: 'arrow_forward' }} tintColor={colors.white} size={17} />
           </Pressable>
         ) : (
-          <Pressable accessibilityRole="button" onPress={() => router.back()} style={[styles.navButton, styles.next]}><Text style={styles.nextText}>Terminar</Text></Pressable>
+          <Pressable accessibilityRole="button" disabled={finishing} onPress={() => { void finishCooking(); }} style={[styles.navButton, styles.next, finishing && styles.disabled]}><Text style={styles.nextText}>{finishing ? 'Guardando…' : 'Terminar'}</Text></Pressable>
         )}
       </View>
     </SafeAreaView>

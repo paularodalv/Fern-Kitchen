@@ -278,6 +278,39 @@ const migrations: Migration[] = [
       CREATE INDEX fermentation_custom_field_history_idx ON fermentation_custom_field_values(field_id, recorded_at DESC);
     `,
   },
+  {
+    version: 7,
+    sql: `
+      CREATE TABLE collection_profiles (id TEXT PRIMARY KEY NOT NULL, user_id TEXT, display_name TEXT NOT NULL DEFAULT 'Mi cocina', created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+      CREATE TABLE user_progress (profile_id TEXT PRIMARY KEY NOT NULL REFERENCES collection_profiles(id) ON DELETE CASCADE, total_xp INTEGER NOT NULL DEFAULT 0 CHECK(total_xp >= 0), updated_at TEXT NOT NULL);
+      CREATE TABLE experience_events (id TEXT PRIMARY KEY NOT NULL, profile_id TEXT NOT NULL REFERENCES collection_profiles(id) ON DELETE CASCADE, user_id TEXT, event_type TEXT NOT NULL, source_type TEXT NOT NULL, source_id TEXT NOT NULL, action_key TEXT NOT NULL UNIQUE, xp_delta INTEGER NOT NULL CHECK(xp_delta > 0), created_at TEXT NOT NULL);
+      CREATE INDEX experience_events_profile_date_idx ON experience_events(profile_id, created_at DESC);
+      CREATE TABLE achievement_definitions (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL, description TEXT NOT NULL, category TEXT NOT NULL, icon TEXT NOT NULL, hint TEXT NOT NULL, xp_reward INTEGER NOT NULL DEFAULT 0, cosmetic_id TEXT, sort_order INTEGER NOT NULL DEFAULT 0);
+      CREATE TABLE user_achievements (id TEXT PRIMARY KEY NOT NULL, profile_id TEXT NOT NULL REFERENCES collection_profiles(id) ON DELETE CASCADE, user_id TEXT, achievement_id TEXT NOT NULL REFERENCES achievement_definitions(id) ON DELETE CASCADE, progress INTEGER NOT NULL DEFAULT 0, is_completed INTEGER NOT NULL DEFAULT 0 CHECK(is_completed IN (0,1)), unlocked_at TEXT, notified_at TEXT, UNIQUE(profile_id, achievement_id));
+      CREATE TABLE sticker_definitions (id TEXT PRIMARY KEY NOT NULL, collection_id TEXT NOT NULL, name TEXT NOT NULL, description TEXT NOT NULL, asset_path TEXT NOT NULL, icon TEXT NOT NULL, unlock_type TEXT NOT NULL, unlock_value TEXT NOT NULL, rarity TEXT NOT NULL DEFAULT 'comun', sort_order INTEGER NOT NULL DEFAULT 0);
+      CREATE TABLE user_stickers (id TEXT PRIMARY KEY NOT NULL, profile_id TEXT NOT NULL REFERENCES collection_profiles(id) ON DELETE CASCADE, user_id TEXT, sticker_id TEXT NOT NULL REFERENCES sticker_definitions(id) ON DELETE CASCADE, unlocked_at TEXT NOT NULL, UNIQUE(profile_id, sticker_id));
+      CREATE TABLE cosmetic_definitions (id TEXT PRIMARY KEY NOT NULL, kind TEXT NOT NULL, name TEXT NOT NULL, description TEXT NOT NULL, asset_path TEXT NOT NULL DEFAULT '', icon TEXT NOT NULL, is_default INTEGER NOT NULL DEFAULT 0 CHECK(is_default IN (0,1)), unlock_type TEXT NOT NULL DEFAULT 'default', unlock_value TEXT NOT NULL DEFAULT '');
+      CREATE TABLE user_cosmetics (id TEXT PRIMARY KEY NOT NULL, profile_id TEXT NOT NULL REFERENCES collection_profiles(id) ON DELETE CASCADE, user_id TEXT, cosmetic_id TEXT NOT NULL REFERENCES cosmetic_definitions(id) ON DELETE CASCADE, unlocked_at TEXT NOT NULL, UNIQUE(profile_id, cosmetic_id));
+      CREATE TABLE user_customization (profile_id TEXT PRIMARY KEY NOT NULL REFERENCES collection_profiles(id) ON DELETE CASCADE, frame_id TEXT REFERENCES cosmetic_definitions(id), background_id TEXT REFERENCES cosmetic_definitions(id), accessory_id TEXT REFERENCES cosmetic_definitions(id), displayed_achievement_id TEXT REFERENCES achievement_definitions(id), displayed_sticker_id TEXT REFERENCES sticker_definitions(id), updated_at TEXT NOT NULL);
+      CREATE TABLE recipe_design_definitions (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL, description TEXT NOT NULL, accent_color TEXT NOT NULL, background_color TEXT NOT NULL, icon TEXT NOT NULL, unlock_type TEXT NOT NULL DEFAULT 'default', unlock_value TEXT NOT NULL DEFAULT '', sort_order INTEGER NOT NULL DEFAULT 0);
+      CREATE TABLE recipe_design_selections (id TEXT PRIMARY KEY NOT NULL, profile_id TEXT NOT NULL REFERENCES collection_profiles(id) ON DELETE CASCADE, user_id TEXT, recipe_id TEXT REFERENCES recipes(id) ON DELETE CASCADE, design_id TEXT NOT NULL REFERENCES recipe_design_definitions(id), updated_at TEXT NOT NULL, UNIQUE(profile_id, recipe_id));
+      CREATE TABLE seasonal_event_definitions (id TEXT PRIMARY KEY NOT NULL, title TEXT NOT NULL, description TEXT NOT NULL, starts_at TEXT NOT NULL, ends_at TEXT NOT NULL, banner_asset TEXT NOT NULL DEFAULT '', icon TEXT NOT NULL, reward_label TEXT NOT NULL DEFAULT '');
+      CREATE TABLE seasonal_event_challenges (id TEXT PRIMARY KEY NOT NULL, event_id TEXT NOT NULL REFERENCES seasonal_event_definitions(id) ON DELETE CASCADE, title TEXT NOT NULL, description TEXT NOT NULL, action_type TEXT NOT NULL, target_count INTEGER NOT NULL CHECK(target_count > 0), reward_xp INTEGER NOT NULL DEFAULT 0, sticker_id TEXT REFERENCES sticker_definitions(id), sort_order INTEGER NOT NULL DEFAULT 0);
+      CREATE TABLE user_event_progress (id TEXT PRIMARY KEY NOT NULL, profile_id TEXT NOT NULL REFERENCES collection_profiles(id) ON DELETE CASCADE, user_id TEXT, challenge_id TEXT NOT NULL REFERENCES seasonal_event_challenges(id) ON DELETE CASCADE, progress INTEGER NOT NULL DEFAULT 0, is_completed INTEGER NOT NULL DEFAULT 0 CHECK(is_completed IN (0,1)), completed_at TEXT, UNIQUE(profile_id, challenge_id));
+      CREATE TABLE user_event_rewards (id TEXT PRIMARY KEY NOT NULL, profile_id TEXT NOT NULL REFERENCES collection_profiles(id) ON DELETE CASCADE, user_id TEXT, event_id TEXT NOT NULL REFERENCES seasonal_event_definitions(id) ON DELETE CASCADE, reward_key TEXT NOT NULL, unlocked_at TEXT NOT NULL, UNIQUE(profile_id, event_id, reward_key));
+      CREATE INDEX user_achievement_profile_idx ON user_achievements(profile_id, is_completed);
+      CREATE INDEX user_sticker_profile_idx ON user_stickers(profile_id);
+      CREATE INDEX user_event_progress_profile_idx ON user_event_progress(profile_id, challenge_id);
+    `,
+  },
+  {
+    version: 8,
+    sql: `
+      CREATE TABLE sticker_collection_definitions (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL, description TEXT NOT NULL, completion_reward TEXT NOT NULL DEFAULT '', sort_order INTEGER NOT NULL DEFAULT 0);
+      CREATE TABLE collection_actions (id TEXT PRIMARY KEY NOT NULL, profile_id TEXT NOT NULL REFERENCES collection_profiles(id) ON DELETE CASCADE, user_id TEXT, action_type TEXT NOT NULL, source_id TEXT NOT NULL, created_at TEXT NOT NULL, UNIQUE(profile_id, action_type, source_id));
+      CREATE TABLE user_event_actions (id TEXT PRIMARY KEY NOT NULL, profile_id TEXT NOT NULL REFERENCES collection_profiles(id) ON DELETE CASCADE, user_id TEXT, challenge_id TEXT NOT NULL REFERENCES seasonal_event_challenges(id) ON DELETE CASCADE, source_id TEXT NOT NULL, created_at TEXT NOT NULL, UNIQUE(profile_id, challenge_id, source_id));
+    `,
+  },
 ];
 
 export async function migrateDatabase(database: SQLiteDatabase): Promise<void> {

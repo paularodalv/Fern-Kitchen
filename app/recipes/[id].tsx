@@ -12,17 +12,20 @@ import { useKitchenTimerRepository } from '@/hooks/useKitchenTimerRepository';
 import { cancelLocalReminder } from '@/services/notifications';
 import { formatQuantity, scaleQuantity } from '@/features/recipes/portion-scaling';
 import type { Recipe } from '@/types/recipe';
+import { useCollectionRepository } from '@/hooks/useCollectionRepository';
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const repository = useRecipeRepository();
   const timerRepository = useKitchenTimerRepository();
+  const collectionRepository = useCollectionRepository();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [servings, setServings] = useState(1);
   const [checkedIngredients, setCheckedIngredients] = useState<string[]>([]);
   const [personalNotes, setPersonalNotes] = useState('');
   const [notesSaved, setNotesSaved] = useState(true);
   const [error, setError] = useState('');
+  const [designId, setDesignId] = useState('classic');
 
   useFocusEffect(useCallback(() => {
     let active = true;
@@ -38,8 +41,9 @@ export default function RecipeDetailScreen() {
     }).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : 'No se pudo cargar la receta.');
     });
+    collectionRepository.getRecipeDesign(id).then((value) => { if (active) setDesignId(value); }).catch(() => undefined);
     return () => { active = false; };
-  }, [id, repository]));
+  }, [id, repository, collectionRepository]));
 
   const toggleIngredient = (ingredientId: string) => setCheckedIngredients((current) => current.includes(ingredientId)
     ? current.filter((item) => item !== ingredientId)
@@ -90,7 +94,7 @@ export default function RecipeDetailScreen() {
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <View style={[styles.hero, { backgroundColor: seasonTone(recipe.idealSeason) }]}>
+        <View style={[styles.hero, { backgroundColor: designId === 'botanical' ? colors.greenLight : designId === 'autumn' ? '#F7E9D0' : designId === 'delicate' ? '#FBE9E2' : designId === 'artisan' ? '#F5E8D4' : seasonTone(recipe.idealSeason) }]}>
           {recipe.imageLocalUri ? <Image source={{ uri: recipe.imageLocalUri }} resizeMode="cover" style={StyleSheet.absoluteFill} /> : (
             <View style={styles.heroPlaceholder}>
               <SymbolView name={{ android: 'restaurant', ios: 'fork.knife', web: 'restaurant' }} tintColor="#8D6E50" size={46} />
@@ -130,6 +134,10 @@ export default function RecipeDetailScreen() {
           <Pressable onPress={() => router.push({ pathname: '/recipes/[id]/cook', params: { id: recipe.id } } as never)} style={styles.cookButton}>
             <SymbolView name={{ android: 'restaurant', ios: 'fork.knife', web: 'restaurant' }} tintColor={colors.white} size={18} />
             <Text style={styles.cookButtonText}>Empezar a cocinar</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/collection/designs', params: { recipeId: recipe.id } } as never)} style={styles.designButton}>
+            <SymbolView name={{ android: 'palette', ios: 'paintpalette', web: 'palette' }} tintColor={colors.greenDark} size={16} />
+            <Text style={styles.designButtonText}>Diseño: {designId === 'classic' ? 'Cuaderno clásico' : designId === 'botanical' ? 'Botánico' : designId === 'artisan' ? 'Panadería artesanal' : designId === 'delicate' ? 'Dulce y delicado' : designId === 'autumn' ? 'Otoño' : designId === 'spring' ? 'Primavera' : 'Especial festivo'}</Text>
           </Pressable>
 
           <View style={styles.section}>
@@ -202,6 +210,7 @@ const styles = StyleSheet.create({
   meta: { marginTop: 22, minHeight: 82, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', borderRadius: radii.md, backgroundColor: colors.greenLight }, metaCell: { flex: 1, alignItems: 'center', gap: 3 }, metaValue: { color: colors.greenDark, fontSize: 12, fontWeight: '700' }, metaLabel: { color: colors.secondaryText, fontSize: 10 }, divider: { width: 1, height: 39, backgroundColor: '#CBDDBD' }, servingsCell: { flex: 1, alignItems: 'center', gap: 5 }, stepper: { flexDirection: 'row', alignItems: 'center', gap: 7 }, step: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' }, stepText: { color: colors.greenDark, fontSize: 14, fontWeight: '700', lineHeight: 18 }, servingCount: { minWidth: 15, color: colors.greenDark, textAlign: 'center', fontSize: 13, fontWeight: '700' },
   section: { marginTop: 29 }, ingredient: { minHeight: 47, flexDirection: 'row', alignItems: 'center', gap: 10, borderBottomWidth: 1, borderBottomColor: '#EAE5DA' }, checkbox: { width: 19, height: 19, borderRadius: 7, borderWidth: 1.5, borderColor: '#C7C4B8', alignItems: 'center', justifyContent: 'center' }, checked: { backgroundColor: colors.green, borderColor: colors.green }, ingredientCopy: { flex: 1 }, ingredientName: { color: colors.text, fontSize: 13 }, crossed: { color: colors.secondaryText, textDecorationLine: 'line-through' }, optional: { marginTop: 2, color: colors.secondaryText, fontSize: 10 }, amount: { color: colors.secondaryText, fontSize: 12 },
   cookButton: { marginTop: 20, minHeight: 51, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, borderRadius: radii.pill, backgroundColor: colors.greenDark }, cookButtonText: { color: colors.white, fontSize: 13, fontWeight: '700' },
+  designButton: { alignSelf: 'center', minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingHorizontal: 12, marginTop: 8, borderRadius: radii.pill, backgroundColor: colors.greenLight }, designButtonText: { color: colors.greenDark, fontSize: 10, fontWeight: '700' },
   description: { color: '#68685D', fontSize: 14, lineHeight: 23 }, stepBlock: { marginBottom: 15 }, stepRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 10 }, stepNumber: { width: 31, height: 31, borderRadius: 11, backgroundColor: colors.butter, alignItems: 'center', justifyContent: 'center' }, stepNumberText: { color: colors.greenDark, fontSize: 10, fontWeight: '800' }, stepCopy: { flex: 1, paddingTop: 3, gap: 4 }, stepTitle: { color: colors.text, fontSize: 13, fontWeight: '700' }, stepDescription: { color: colors.text, fontSize: 13, lineHeight: 20 },
   noteCard: { marginTop: 29, padding: 16, flexDirection: 'row', alignItems: 'flex-start', gap: 11, borderRadius: radii.md, backgroundColor: '#F8EDD1' }, noteIcon: { width: 35, height: 35, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.cream }, noteTitle: { color: colors.text, fontSize: 13, fontWeight: '700', marginBottom: 4 }, noteText: { color: '#77705E', fontSize: 12, lineHeight: 19 }, deleteButton: { alignSelf: 'center', marginTop: 26, paddingHorizontal: 18, paddingVertical: 10 }, deleteText: { color: '#AD5B52', fontSize: 12, fontWeight: '700' },
   personalNoteCard: { marginTop: 27, padding: 16, borderRadius: radii.md, backgroundColor: colors.white, gap: 8 }, personalNoteInput: { minHeight: 90, padding: 12, borderRadius: radii.sm, borderWidth: 1, borderColor: colors.border, color: colors.text, fontSize: 13, lineHeight: 19, textAlignVertical: 'top' }, saveNoteButton: { alignSelf: 'flex-end', paddingHorizontal: 14, paddingVertical: 9, borderRadius: radii.pill, backgroundColor: colors.greenDark }, savedNoteButton: { backgroundColor: colors.greenLight }, saveNoteText: { color: colors.greenDark, fontSize: 11, fontWeight: '700' },
