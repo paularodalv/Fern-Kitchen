@@ -1,5 +1,6 @@
 export type RecipeSeason = 'Primavera' | 'Verano' | 'Otoño' | 'Invierno' | 'Todo el año';
 export type PatienceLevel = 'Baja' | 'Media' | 'Alta';
+export type RecipeVisibility = 'private' | 'public';
 
 export type RecipeIngredient = {
   id: string;
@@ -7,9 +8,11 @@ export type RecipeIngredient = {
   quantity: number | null;
   unit: string | null;
   optional: boolean;
+  createdAt: string;
+  updatedAt: string;
 };
 
-export type RecipeIngredientInput = Omit<RecipeIngredient, 'id'>;
+export type RecipeIngredientInput = Omit<RecipeIngredient, 'id' | 'createdAt' | 'updatedAt'>;
 
 export type RecipeStep = {
   id: string;
@@ -17,9 +20,11 @@ export type RecipeStep = {
   title: string;
   description: string;
   timerMinutes: number | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
-export type RecipeStepInput = Omit<RecipeStep, 'id' | 'number'> & { number?: number };
+export type RecipeStepInput = Omit<RecipeStep, 'id' | 'number' | 'createdAt' | 'updatedAt'> & { number?: number };
 
 export type RecipeFields = {
   title: string;
@@ -35,11 +40,14 @@ export type RecipeFields = {
   grandmotherNotes: string;
   personalNotes: string;
   userId?: string | null;
+  ownerUserId?: string | null;
+  visibility?: RecipeVisibility;
 };
 
 export type RecipeSummary = {
   id: string;
   userId: string | null;
+  ownerUserId: string | null;
   title: string;
   description: string;
   imageLocalUri: string | null;
@@ -53,6 +61,7 @@ export type RecipeSummary = {
   createdAt: string;
   updatedAt: string;
   isFavorite: boolean;
+  visibility: RecipeVisibility;
 };
 
 export type Recipe = RecipeSummary & {

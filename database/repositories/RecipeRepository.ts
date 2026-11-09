@@ -10,6 +10,7 @@ const recipeSelect = `
   SELECT
     id,
     user_id AS userId,
+    owner_user_id AS ownerUserId,
     title,
     COALESCE(description, '') AS description,
     image_local_uri AS imageLocalUri,
@@ -23,6 +24,7 @@ const recipeSelect = `
     created_at AS createdAt,
     updated_at AS updatedAt,
     is_favorite AS favoriteFlag
+    , visibility
   FROM recipes
 `;
 
@@ -100,12 +102,12 @@ export class RecipeRepository {
 
     const [ingredientRows, steps] = await Promise.all([
       this.database.getAllAsync<IngredientRow>(
-        `SELECT id, name, quantity, unit, is_optional AS optionalFlag
+        `SELECT id, name, quantity, unit, is_optional AS optionalFlag, created_at AS createdAt, updated_at AS updatedAt
          FROM recipe_ingredients WHERE recipe_id = ? ORDER BY position ASC;`,
         id,
       ),
       this.database.getAllAsync<RecipeStep>(
-        `SELECT id, step_number AS number, title, description, timer_minutes AS timerMinutes
+        `SELECT id, step_number AS number, title, description, timer_minutes AS timerMinutes, created_at AS createdAt, updated_at AS updatedAt
          FROM recipe_steps WHERE recipe_id = ? ORDER BY step_number ASC;`,
         id,
       ),
@@ -119,6 +121,8 @@ export class RecipeRepository {
         quantity: ingredient.quantity,
         unit: ingredient.unit,
         optional: ingredient.optionalFlag === 1,
+        createdAt: ingredient.createdAt,
+        updatedAt: ingredient.updatedAt,
       })),
       steps,
     };
@@ -131,10 +135,10 @@ export class RecipeRepository {
     await this.database.withTransactionAsync(async () => {
       await this.database.runAsync(
         `INSERT INTO recipes (
-          id, user_id, title, description, image_local_uri, ideal_season, category,
+          id, user_id, owner_user_id, visibility, title, description, image_local_uri, ideal_season, category,
           total_minutes, patience_level, base_servings, grandmother_notes, created_at, updated_at, personal_notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-        id, fields.userId ?? null, fields.title, fields.description, fields.imageLocalUri,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+        id, fields.userId ?? fields.ownerUserId ?? null, fields.ownerUserId ?? fields.userId ?? null, fields.visibility ?? 'private', fields.title, fields.description, fields.imageLocalUri,
         fields.idealSeason, fields.category, fields.totalMinutes, fields.patienceLevel,
         fields.baseServings, fields.grandmotherNotes || null, now, now, fields.personalNotes,
       );
@@ -153,11 +157,11 @@ export class RecipeRepository {
     await this.database.withTransactionAsync(async () => {
       const result = await this.database.runAsync(
         `UPDATE recipes SET
-          user_id = ?, title = ?, description = ?, image_local_uri = ?, ideal_season = ?,
+          user_id = ?, owner_user_id = ?, visibility = ?, title = ?, description = ?, image_local_uri = ?, ideal_season = ?,
           category = ?, total_minutes = ?, patience_level = ?, base_servings = ?,
           grandmother_notes = ?, personal_notes = ?, updated_at = ?
         WHERE id = ?;`,
-        fields.userId ?? null, fields.title, fields.description, fields.imageLocalUri,
+        fields.userId ?? fields.ownerUserId ?? null, fields.ownerUserId ?? fields.userId ?? null, fields.visibility ?? 'private', fields.title, fields.description, fields.imageLocalUri,
         fields.idealSeason, fields.category, fields.totalMinutes, fields.patienceLevel,
         fields.baseServings, fields.grandmotherNotes || null, fields.personalNotes, now, id,
       );
@@ -207,19 +211,19 @@ export class RecipeRepository {
     for (let index = 0; index < fields.ingredients.length; index += 1) {
       const ingredient = fields.ingredients[index];
       await this.database.runAsync(
-        `INSERT INTO recipe_ingredients (id, recipe_id, name, normalized_name, quantity, unit, position, is_optional)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+        `INSERT INTO recipe_ingredients (id, recipe_id, name, normalized_name, quantity, unit, position, is_optional, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
         this.createUuid(), recipeId, ingredient.name, normalizeIngredientName(ingredient.name), ingredient.quantity, ingredient.unit,
-        index, ingredient.optional ? 1 : 0,
+        index, ingredient.optional ? 1 : 0, new Date().toISOString(), new Date().toISOString(),
       );
     }
 
     for (let index = 0; index < fields.steps.length; index += 1) {
       const step = fields.steps[index];
       await this.database.runAsync(
-        `INSERT INTO recipe_steps (id, recipe_id, step_number, title, description, timer_minutes)
-         VALUES (?, ?, ?, ?, ?, ?);`,
-        this.createUuid(), recipeId, index + 1, step.title, step.description, step.timerMinutes,
+        `INSERT INTO recipe_steps (id, recipe_id, step_number, title, description, timer_minutes, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+        this.createUuid(), recipeId, index + 1, step.title, step.description, step.timerMinutes, new Date().toISOString(), new Date().toISOString(),
       );
     }
   }

@@ -350,6 +350,86 @@ const migrations: Migration[] = [
       CREATE INDEX sticker_definitions_asset_id_idx ON sticker_definitions(asset_id);
     `,
   },
+  {
+    version: 10,
+    sql: `
+      ALTER TABLE recipes ADD COLUMN owner_user_id TEXT;
+      UPDATE recipes SET owner_user_id=user_id WHERE owner_user_id IS NULL;
+      ALTER TABLE recipes ADD COLUMN visibility TEXT NOT NULL DEFAULT 'private'
+        CHECK(visibility IN ('private','public'));
+      CREATE INDEX recipes_owner_user_id_idx ON recipes(owner_user_id);
+
+      ALTER TABLE recipe_ingredients ADD COLUMN created_at TEXT NOT NULL DEFAULT '';
+      ALTER TABLE recipe_ingredients ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+      UPDATE recipe_ingredients SET
+        created_at=(SELECT created_at FROM recipes WHERE recipes.id=recipe_ingredients.recipe_id),
+        updated_at=(SELECT updated_at FROM recipes WHERE recipes.id=recipe_ingredients.recipe_id);
+      ALTER TABLE recipe_steps ADD COLUMN created_at TEXT NOT NULL DEFAULT '';
+      ALTER TABLE recipe_steps ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+      UPDATE recipe_steps SET
+        created_at=(SELECT created_at FROM recipes WHERE recipes.id=recipe_steps.recipe_id),
+        updated_at=(SELECT updated_at FROM recipes WHERE recipes.id=recipe_steps.recipe_id);
+
+      ALTER TABLE pantry_items ADD COLUMN owner_user_id TEXT;
+      UPDATE pantry_items SET owner_user_id=user_id WHERE owner_user_id IS NULL;
+      CREATE INDEX pantry_items_owner_user_id_idx ON pantry_items(owner_user_id);
+      ALTER TABLE meal_plan_entries ADD COLUMN owner_user_id TEXT;
+      UPDATE meal_plan_entries SET owner_user_id=user_id WHERE owner_user_id IS NULL;
+      CREATE INDEX meal_plan_owner_user_id_idx ON meal_plan_entries(owner_user_id);
+      ALTER TABLE shopping_list_items ADD COLUMN owner_user_id TEXT;
+      UPDATE shopping_list_items SET owner_user_id=user_id WHERE owner_user_id IS NULL;
+      ALTER TABLE fermentation_projects ADD COLUMN owner_user_id TEXT;
+      UPDATE fermentation_projects SET owner_user_id=user_id WHERE owner_user_id IS NULL;
+      CREATE INDEX fermentation_projects_owner_user_id_idx ON fermentation_projects(owner_user_id);
+      ALTER TABLE collection_profiles ADD COLUMN owner_user_id TEXT;
+      UPDATE collection_profiles SET owner_user_id=user_id WHERE owner_user_id IS NULL;
+
+      ALTER TABLE fermentation_events ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+      UPDATE fermentation_events SET updated_at=created_at;
+      ALTER TABLE fermentation_photos ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+      UPDATE fermentation_photos SET updated_at=created_at;
+      ALTER TABLE fermentation_ingredients ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+      UPDATE fermentation_ingredients SET updated_at=created_at;
+      ALTER TABLE fermentation_custom_fields ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+      UPDATE fermentation_custom_fields SET updated_at=created_at;
+      ALTER TABLE fermentation_custom_field_values ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+      UPDATE fermentation_custom_field_values SET updated_at=created_at;
+    `,
+  },
+  {
+    version: 11,
+    sql: `
+      ALTER TABLE fermentation_batches ADD COLUMN owner_user_id TEXT;
+      ALTER TABLE fermentation_events ADD COLUMN owner_user_id TEXT;
+      ALTER TABLE fermentation_reminders ADD COLUMN owner_user_id TEXT;
+      ALTER TABLE fermentation_photos ADD COLUMN owner_user_id TEXT;
+      ALTER TABLE fermentation_ingredients ADD COLUMN owner_user_id TEXT;
+      ALTER TABLE fermentation_custom_fields ADD COLUMN owner_user_id TEXT;
+      ALTER TABLE fermentation_custom_field_values ADD COLUMN owner_user_id TEXT;
+      ALTER TABLE experience_events ADD COLUMN owner_user_id TEXT;
+      ALTER TABLE user_achievements ADD COLUMN owner_user_id TEXT;
+      ALTER TABLE user_stickers ADD COLUMN owner_user_id TEXT;
+      ALTER TABLE user_cosmetics ADD COLUMN owner_user_id TEXT;
+      ALTER TABLE recipe_design_selections ADD COLUMN owner_user_id TEXT;
+      ALTER TABLE user_event_progress ADD COLUMN owner_user_id TEXT;
+      ALTER TABLE user_event_rewards ADD COLUMN owner_user_id TEXT;
+      ALTER TABLE collection_actions ADD COLUMN owner_user_id TEXT;
+      ALTER TABLE user_event_actions ADD COLUMN owner_user_id TEXT;
+      UPDATE experience_events SET owner_user_id=user_id WHERE owner_user_id IS NULL;
+      UPDATE user_achievements SET owner_user_id=user_id WHERE owner_user_id IS NULL;
+      UPDATE user_stickers SET owner_user_id=user_id WHERE owner_user_id IS NULL;
+      UPDATE user_cosmetics SET owner_user_id=user_id WHERE owner_user_id IS NULL;
+      UPDATE recipe_design_selections SET owner_user_id=user_id WHERE owner_user_id IS NULL;
+      UPDATE user_event_progress SET owner_user_id=user_id WHERE owner_user_id IS NULL;
+      UPDATE user_event_rewards SET owner_user_id=user_id WHERE owner_user_id IS NULL;
+      UPDATE collection_actions SET owner_user_id=user_id WHERE owner_user_id IS NULL;
+      UPDATE user_event_actions SET owner_user_id=user_id WHERE owner_user_id IS NULL;
+      CREATE INDEX fermentation_batches_owner_idx ON fermentation_batches(owner_user_id);
+      CREATE INDEX fermentation_events_owner_idx ON fermentation_events(owner_user_id);
+      CREATE INDEX fermentation_reminders_owner_idx ON fermentation_reminders(owner_user_id);
+      CREATE INDEX collection_actions_owner_idx ON collection_actions(owner_user_id);
+    `,
+  },
 ];
 
 export async function migrateDatabase(database: SQLiteDatabase): Promise<void> {

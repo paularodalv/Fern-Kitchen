@@ -42,6 +42,11 @@ export default function KitchenScreen() {
           <View style={{ flex: 1 }}><Text style={styles.collectionTitle}>Mi colección</Text><Text style={styles.collectionHint}>Tus avances, pegatinas y pequeños detalles personales.</Text></View>
           <SymbolView name={{ android: 'chevron_right', ios: 'chevron.right', web: 'chevron_right' }} tintColor={colors.greenDark} size={18} />
         </Pressable>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/backup' as never)} style={styles.collectionCard}>
+          <View style={styles.collectionIcon}><SymbolView name={{ android: 'backup', ios: 'externaldrive', web: 'backup' }} tintColor={colors.greenDark} size={23} /></View>
+          <View style={{ flex: 1 }}><Text style={styles.collectionTitle}>Copias de seguridad</Text><Text style={styles.collectionHint}>Exporta o recupera tus recetas y datos de la alacena.</Text></View>
+          <SymbolView name={{ android: 'chevron_right', ios: 'chevron.right', web: 'chevron_right' }} tintColor={colors.greenDark} size={18} />
+        </Pressable>
 
         <View style={styles.profileCard}>
           <View style={styles.profileIcon}>{profileUri ? <Image source={{ uri: profileUri }} style={styles.profileImage} onError={() => setProfileUri(null)} /> : <SymbolView name={{ android: 'soup_kitchen', ios: 'fork.knife.circle', web: 'soup_kitchen' }} tintColor={colors.greenDark} size={29} />}</View>

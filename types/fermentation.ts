@@ -19,10 +19,12 @@ export type FermentationProjectInput = {
   personalNotes: string;
   ingredients: FermentationIngredient[];
   userId?: string | null;
+  ownerUserId?: string | null;
 };
 
 export type FermentationProject = FermentationProjectInput & {
   id: string;
+  ownerUserId: string | null;
   createdAt: string;
   updatedAt: string;
   currentStage: string | null;

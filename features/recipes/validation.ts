@@ -24,6 +24,7 @@ export function validateRecipeFields(input: RecipeFields): RecipeFields {
   const category = input.category.trim();
   const grandmotherNotes = input.grandmotherNotes.trim();
   const personalNotes = input.personalNotes.trim();
+  const visibility = input.visibility ?? 'private';
 
   if (!title) issues.push({ field: 'title', message: 'Escribe un título para la receta.' });
   if (title.length > 120) issues.push({ field: 'title', message: 'El título no puede superar 120 caracteres.' });
@@ -33,6 +34,7 @@ export function validateRecipeFields(input: RecipeFields): RecipeFields {
   if (category.length > 50) issues.push({ field: 'category', message: 'La categoría no puede superar 50 caracteres.' });
   if (!seasons.includes(input.idealSeason)) issues.push({ field: 'idealSeason', message: 'Selecciona una estación válida.' });
   if (!patienceLevels.includes(input.patienceLevel)) issues.push({ field: 'patienceLevel', message: 'Selecciona un nivel de paciencia válido.' });
+  if (visibility !== 'private' && visibility !== 'public') issues.push({ field: 'visibility', message: 'Elige una visibilidad de receta válida.' });
   if (!Number.isInteger(input.totalMinutes) || input.totalMinutes < 1 || input.totalMinutes > 1440) {
     issues.push({ field: 'totalMinutes', message: 'El tiempo total debe ser un número entero entre 1 y 1.440 minutos.' });
   }
@@ -68,6 +70,8 @@ export function validateRecipeFields(input: RecipeFields): RecipeFields {
     category,
     grandmotherNotes,
     personalNotes,
+    visibility,
+    ownerUserId: input.ownerUserId ?? input.userId ?? null,
     imageLocalUri: input.imageLocalUri?.trim() || null,
     ingredients: input.ingredients.map((ingredient) => ({
       ...ingredient,

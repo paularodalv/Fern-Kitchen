@@ -2,7 +2,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import type { PantryFilters, PantryItem, PantryItemFields } from '../../types/pantry';
 import { PantryItemNotFoundError, validatePantryItem } from '../../features/pantry/validation.ts';
 
-const selectPantryItem = `SELECT id, user_id AS userId, name, normalized_name AS normalizedName,
+const selectPantryItem = `SELECT id, user_id AS userId, owner_user_id AS ownerUserId, name, normalized_name AS normalizedName,
   quantity, unit, purchase_date AS purchaseDate, best_before_date AS bestBeforeDate,
   category, notes, image_local_uri AS imageLocalUri, created_at AS createdAt, updated_at AS updatedAt FROM pantry_items`;
 
@@ -47,10 +47,10 @@ export class PantryRepository {
     const now = new Date().toISOString();
     await this.database.runAsync(
       `INSERT INTO pantry_items
-       (id, user_id, name, normalized_name, quantity, unit, purchase_date, best_before_date,
+       (id, user_id, owner_user_id, name, normalized_name, quantity, unit, purchase_date, best_before_date,
         category, notes, image_local_uri, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-      id, fields.userId ?? null, fields.name, fields.normalizedName, fields.quantity, fields.unit,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+      id, fields.userId ?? fields.ownerUserId ?? null, fields.ownerUserId ?? fields.userId ?? null, fields.name, fields.normalizedName, fields.quantity, fields.unit,
       fields.purchaseDate, fields.bestBeforeDate, fields.category, fields.notes, fields.imageLocalUri ?? null, now, now,
     );
     const created = await this.getById(id);
@@ -61,9 +61,9 @@ export class PantryRepository {
   async update(id: string, input: PantryItemFields): Promise<PantryItem> {
     const fields = validatePantryItem(input);
     const result = await this.database.runAsync(
-      `UPDATE pantry_items SET user_id = ?, name = ?, normalized_name = ?, quantity = ?, unit = ?,
+      `UPDATE pantry_items SET user_id = ?, owner_user_id = ?, name = ?, normalized_name = ?, quantity = ?, unit = ?,
        purchase_date = ?, best_before_date = ?, category = ?, notes = ?, image_local_uri = ?, updated_at = ? WHERE id = ?;`,
-      fields.userId ?? null, fields.name, fields.normalizedName, fields.quantity, fields.unit,
+      fields.userId ?? fields.ownerUserId ?? null, fields.ownerUserId ?? fields.userId ?? null, fields.name, fields.normalizedName, fields.quantity, fields.unit,
       fields.purchaseDate, fields.bestBeforeDate, fields.category, fields.notes, fields.imageLocalUri ?? null, new Date().toISOString(), id,
     );
     if (result.changes === 0) throw new PantryItemNotFoundError(id);

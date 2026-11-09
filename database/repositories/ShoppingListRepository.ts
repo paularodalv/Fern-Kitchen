@@ -3,7 +3,7 @@ import type { ShoppingListItem, ShoppingListItemInput } from '../../types/meal-p
 
 type ShoppingListRow = Omit<ShoppingListItem, 'isPurchased' | 'hasQuantity'> & { purchasedFlag: number; hasQuantityFlag: number };
 
-const selectShoppingItem = `SELECT id, user_id AS userId, week_start_date AS weekStartDate,
+const selectShoppingItem = `SELECT id, user_id AS userId, owner_user_id AS ownerUserId, week_start_date AS weekStartDate,
   name, normalized_name AS normalizedName, quantity, unit, normalized_unit AS normalizedUnit,
   has_quantity AS hasQuantityFlag, is_purchased AS purchasedFlag,
   created_at AS createdAt, updated_at AS updatedAt FROM shopping_list_items`;
@@ -34,10 +34,10 @@ export class ShoppingListRepository {
         const previous = existingByKey.get(key);
         await this.database.runAsync(
           `INSERT INTO shopping_list_items
-           (id, user_id, week_start_date, name, normalized_name, quantity, unit, normalized_unit,
+           (id, user_id, owner_user_id, week_start_date, name, normalized_name, quantity, unit, normalized_unit,
             has_quantity, is_purchased, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-          previous?.id ?? this.createUuid(), previous?.userId ?? null, weekStartDate, item.name,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+          previous?.id ?? this.createUuid(), previous?.userId ?? null, previous?.ownerUserId ?? null, weekStartDate, item.name,
           item.normalizedName, item.quantity, item.unit, item.normalizedUnit, item.hasQuantity ? 1 : 0,
           previous?.isPurchased ? 1 : 0, previous?.createdAt ?? now, now,
         );

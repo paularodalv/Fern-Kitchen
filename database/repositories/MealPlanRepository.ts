@@ -5,7 +5,7 @@ import { MealPlanEntryNotFoundError, MealSlotConflictError, validateMealPlanEntr
 type MealPlanRow = Omit<PlannedMeal, 'recipeExists'> & { linkedRecipeId: string | null };
 
 const selectMeal = `SELECT
-  meal.id, meal.user_id AS userId, meal.date, meal.meal_type AS mealType,
+  meal.id, meal.user_id AS userId, meal.owner_user_id AS ownerUserId, meal.date, meal.meal_type AS mealType,
   meal.entry_kind AS entryKind, meal.recipe_id AS recipeId,
   meal.custom_meal_name AS customMealName,
   meal.custom_meal_description AS customMealDescription,
@@ -60,10 +60,10 @@ export class MealPlanRepository {
       if (!current) throw new MealPlanEntryNotFoundError(id);
       await this.ensureSlotIsAvailable(fields.date, fields.mealType, id);
       await this.database.runAsync(
-        `UPDATE meal_plan_entries SET user_id = ?, date = ?, meal_type = ?, entry_kind = ?,
+        `UPDATE meal_plan_entries SET user_id = ?, owner_user_id = ?, date = ?, meal_type = ?, entry_kind = ?,
          recipe_id = ?, custom_meal_name = ?, custom_meal_description = ?, custom_meal_image_uri = ?, servings = ?, notes = ?, updated_at = ?
          WHERE id = ?;`,
-        fields.userId ?? null, fields.date, fields.mealType, fields.entryKind, fields.recipeId,
+        fields.userId ?? fields.ownerUserId ?? null, fields.ownerUserId ?? fields.userId ?? null, fields.date, fields.mealType, fields.entryKind, fields.recipeId,
         fields.customMealName, fields.customMealDescription, fields.customMealImageUri ?? null, fields.servings, fields.notes, now, id,
       );
     });
@@ -89,10 +89,10 @@ export class MealPlanRepository {
   private insert(id: string, fields: MealPlanEntryFields, createdAt: string, updatedAt: string): Promise<unknown> {
     return this.database.runAsync(
       `INSERT INTO meal_plan_entries
-       (id, user_id, date, meal_type, entry_kind, recipe_id, custom_meal_name,
+       (id, user_id, owner_user_id, date, meal_type, entry_kind, recipe_id, custom_meal_name,
         custom_meal_description, custom_meal_image_uri, servings, notes, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-      id, fields.userId ?? null, fields.date, fields.mealType, fields.entryKind, fields.recipeId,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+      id, fields.userId ?? fields.ownerUserId ?? null, fields.ownerUserId ?? fields.userId ?? null, fields.date, fields.mealType, fields.entryKind, fields.recipeId,
       fields.customMealName, fields.customMealDescription, fields.customMealImageUri ?? null, fields.servings, fields.notes, createdAt, updatedAt,
     );
   }

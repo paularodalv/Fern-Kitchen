@@ -10,11 +10,13 @@ export type PantryItemFields = {
   notes: string;
   imageLocalUri?: string | null;
   userId?: string | null;
+  ownerUserId?: string | null;
 };
 
 export type PantryItem = PantryItemFields & {
   id: string;
   userId: string | null;
+  ownerUserId: string | null;
   normalizedName: string;
   createdAt: string;
   updatedAt: string;

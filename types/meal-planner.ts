@@ -12,11 +12,13 @@ export type MealPlanEntryFields = {
   notes: string;
   customMealImageUri?: string | null;
   userId?: string | null;
+  ownerUserId?: string | null;
 };
 
 export type PlannedMeal = MealPlanEntryFields & {
   id: string;
   userId: string | null;
+  ownerUserId: string | null;
   recipeTitle: string | null;
   recipeImageLocalUri: string | null;
   recipeExists: boolean;
@@ -36,6 +38,7 @@ export type ShoppingListItemInput = {
 export type ShoppingListItem = ShoppingListItemInput & {
   id: string;
   userId: string | null;
+  ownerUserId: string | null;
   weekStartDate: string;
   isPurchased: boolean;
   createdAt: string;

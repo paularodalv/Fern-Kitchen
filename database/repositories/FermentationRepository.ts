@@ -15,7 +15,7 @@ type EventRow = Omit<FermentationEvent, 'measurements' | 'ingredients'> & { meas
 type ReminderRow = Omit<FermentationReminder, 'isCompleted'> & { completedFlag: number };
 type IngredientRow = { id: string; name: string; quantity: number | null; unit: string };
 
-const projectSelect = `SELECT p.id, p.user_id AS userId, p.name, p.fermentation_type AS fermentationType,
+const projectSelect = `SELECT p.id, p.user_id AS userId, p.owner_user_id AS ownerUserId, p.name, p.fermentation_type AS fermentationType,
   p.custom_type_name AS customTypeName, p.description, p.status, p.start_date AS startDate,
   p.expected_duration_days AS expectedDurationDays, p.temperature_notes AS temperatureNotes,
   p.initial_photo_uri AS initialPhotoUri, p.personal_notes AS personalNotes,
@@ -50,10 +50,10 @@ export class FermentationRepository {
     const now = new Date().toISOString();
     await this.database.withTransactionAsync(async () => {
       await this.database.runAsync(
-        `INSERT INTO fermentation_projects (id, user_id, name, fermentation_type, custom_type_name, description, status,
+        `INSERT INTO fermentation_projects (id, user_id, owner_user_id, name, fermentation_type, custom_type_name, description, status,
           start_date, expected_duration_days, temperature_notes, initial_photo_uri, personal_notes, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-        id, fields.userId ?? null, fields.name, fields.fermentationType, fields.customTypeName, fields.description,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+        id, fields.userId ?? fields.ownerUserId ?? null, fields.ownerUserId ?? fields.userId ?? null, fields.name, fields.fermentationType, fields.customTypeName, fields.description,
         fields.status, fields.startDate, fields.expectedDurationDays, fields.temperatureNotes,
         fields.initialPhotoUri, fields.personalNotes, now, now,
       );
@@ -71,10 +71,10 @@ export class FermentationRepository {
     const now = new Date().toISOString();
     await this.database.withTransactionAsync(async () => {
       const result = await this.database.runAsync(
-        `UPDATE fermentation_projects SET user_id = ?, name = ?, fermentation_type = ?, custom_type_name = ?, description = ?,
+        `UPDATE fermentation_projects SET user_id = ?, owner_user_id = ?, name = ?, fermentation_type = ?, custom_type_name = ?, description = ?,
           status = ?, start_date = ?, expected_duration_days = ?, temperature_notes = ?, initial_photo_uri = ?, personal_notes = ?, updated_at = ?
          WHERE id = ?;`,
-        fields.userId ?? null, fields.name, fields.fermentationType, fields.customTypeName, fields.description, fields.status,
+        fields.userId ?? fields.ownerUserId ?? null, fields.ownerUserId ?? fields.userId ?? null, fields.name, fields.fermentationType, fields.customTypeName, fields.description, fields.status,
         fields.startDate, fields.expectedDurationDays, fields.temperatureNotes, fields.initialPhotoUri, fields.personalNotes, now, id,
       );
       if (!result.changes) throw new Error('No se encontró el proyecto de fermentación.');
