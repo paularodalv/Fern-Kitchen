@@ -9,6 +9,7 @@
     "userInterfaceStyle": "light",
     "platforms": ["android"],
     "android": {
+      "allowBackup": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/fern-app-icon-foreground.png",
         "backgroundColor": "#FFF8EB"
